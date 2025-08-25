@@ -1,0 +1,51 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create:*)",
+      "Bash(mkdir:*)",
+      "Bash(npm install:*)",
+      "Bash(npx create-playwright:*)",
+      "Bash(npx playwright:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(find:*)",
+      "Bash(npm run dev:*)",
+      "Bash(node:*)",
+      "Bash(chmod:*)",
+      "Bash(cp:*)",
+      "Bash(docker:*)",
+      "mcp__Endgame__review",
+      "mcp__Endgame__deploy",
+      "Bash(sed:*)",
+      "Bash(curl:*)",
+      "Bash(npm run build:*)",
+      "Bash(taskkill:*)",
+      "Bash(xcopy:*)",
+      "Bash(timeout:*)",
+      "Bash(wmic process where processid=35364 delete:*)",
+      "Bash(PORT=3001 node src/app.js)",
+      "Bash(PORT=3001 node simple-server.js)",
+      "Bash(wmic process where processid=35660 delete:*)",
+      "Bash(wmic process where processid=12108 delete:*)",
+      "Bash(set PORT=3000)",
+      "Bash(tasklist:*)",
+      "Bash(wmic:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(git clone:*)",
+      "Bash(echo $env:USERPROFILE.claudeagents)",
+      "Bash(set USERPROFILE)",
+      "Bash(if not exist \"C:\\Users\\duron\\.claude\\agents\" mkdir \"C:\\Users\\duron\\.claude\\agents\")",
+      "Bash(robocopy:*)",
+      "Bash(powershell:*)",
+      "Bash(dir \"C:\\Users\\duron\\.claude\\agents\")",
+      "Bash(mv:*)",
+      "Bash(npm test:*)",
+      "Bash(npm run type-check:*)"
+    ],
+    "deny": [],
+    "defaultMode": "acceptEdits",
+    "additionalDirectories": [
+      "E:\\mnt\\e\\dev\\bunosAssign"
+    ]
+  }
+}

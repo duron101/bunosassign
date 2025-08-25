@@ -1,0 +1,51 @@
+# 前端生产环境 Dockerfile
+FROM node:18-alpine AS builder
+
+# 安装构建依赖
+RUN apk add --no-cache git python3 make g++
+
+# 设置工作目录
+WORKDIR /app
+
+# 复制package文件
+COPY package*.json ./
+
+# 安装依赖
+RUN npm ci && npm cache clean --force
+
+# 复制源代码
+COPY . .
+
+# 构建生产版本
+RUN npm run build
+
+# 生产阶段
+FROM nginx:alpine AS production
+
+# 创建nginx用户和必要目录
+RUN addgroup -g 101 -S nginx || true && \
+    adduser -S -D -H -u 101 -h /var/cache/nginx -s /sbin/nologin -G nginx -g nginx nginx || true && \
+    mkdir -p /var/log/nginx && \
+    touch /var/log/nginx/access.log /var/log/nginx/error.log && \
+    chown -R nginx:nginx /var/log/nginx
+
+# 复制构建结果
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# 复制nginx配置
+COPY nginx.prod.conf /etc/nginx/nginx.conf
+
+# 复制启动脚本
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
+# 暴露端口
+EXPOSE 80 443
+
+# 设置健康检查
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost/api/health || exit 1
+
+# 启动nginx
+ENTRYPOINT ["/docker-entrypoint.sh"]
+CMD ["nginx", "-g", "daemon off;"]
