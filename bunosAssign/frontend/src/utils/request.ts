@@ -13,7 +13,7 @@ export interface ApiResponse<T = any> {
 
 // 创建axios实例
 const service: AxiosInstance = axios.create({
-  baseURL: '/api',
+  baseURL: 'http://localhost:3000/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json;charset=utf-8'
@@ -170,7 +170,7 @@ service.interceptors.response.use(
 // 处理登出
 const handleLogout = (isSilent = false) => {
   if (isLoggingOut || isHandlingExpiredLogin) return  // 防止重复执行
-  
+ 
   isHandlingExpiredLogin = true
   isLoggingOut = true
   
@@ -180,15 +180,13 @@ const handleLogout = (isSilent = false) => {
   const now = Date.now()
   const shouldShowMessage = !isSilent && (now - lastLoginExpiredTime > 5000)
   
-  // 如果用户确实已登录（有用户信息），才执行登出
-  if (userStore.user) {
-    console.log('handleLogout called: User is logged in, performing logout...')
-    userStore.logout()
-    
-    if (shouldShowMessage) {
-      ElMessage.warning('登录已过期，请重新登录')
-      lastLoginExpiredTime = now
-    }
+  // 清除用户状态
+  console.log('handleLogout called: Clearing user state...')
+  userStore.logout()
+  
+  if (shouldShowMessage) {
+    ElMessage.warning('登录已过期，请重新登录')
+    lastLoginExpiredTime = now
   }
   
   // 检查当前是否已经在登录页面
@@ -196,35 +194,24 @@ const handleLogout = (isSilent = false) => {
   const isOnLoginPage = currentPath === '/login' || currentPath.includes('/login')
   
   if (!isOnLoginPage) {
-    console.log('handleLogout called: Token expired, redirecting to login...')
-    console.log('Current pathname:', currentPath)
-    console.log('isSilent:', isSilent)
+    console.log('handleLogout called: Redirecting to login...')
     
-    // 使用更短的延迟，快速跳转
-    setTimeout(() => {
-      console.log('Executing redirect to login')
-      // 使用router.push而不是window.location.href，避免页面刷新
-      try {
-        // 动态导入router避免循环依赖
-        import('@/router').then(({ default: router }) => {
-          router.push('/login')
-        }).catch(() => {
-          // 如果router导入失败，使用window.location作为备选方案
-          window.location.href = '/login'
-        })
-      } catch (error) {
-        console.error('Router push failed, using window.location as fallback:', error)
+    // 直接跳转到登录页面
+    try {
+      import('@/router').then(({ default: router }) => {
+        router.replace('/login')
+      }).catch(() => {
         window.location.href = '/login'
-      }
-      isLoggingOut = false  
-      isHandlingExpiredLogin = false
-    }, 300)
-  } else {
-    console.log('Already on login page, not redirecting')
-    // 重置状态
-    isLoggingOut = false
-    isHandlingExpiredLogin = false
+      })
+    } catch (error) {
+      console.error('Router navigation failed:', error)
+      window.location.href = '/login'
+    }
   }
+  
+  // 重置状态
+  isLoggingOut = false
+  isHandlingExpiredLogin = false
 }
 
 export default service

@@ -34,18 +34,43 @@
 
     <!-- 参数模拟 -->
     <div v-if="activeTab === 'parameter'" class="parameter-simulation">
+      <!-- 引导提示 -->
+      <el-alert
+        v-if="!simulationParams.bonusPoolId"
+        title="使用指南"
+        type="info"
+        description="请先选择一个奖金池来开始模拟分析。选择奖金池后，系统会加载相关的业务线权重配置和参数设置。"
+        show-icon
+        :closable="false"
+        class="guide-alert"
+      />
+      
       <el-row :gutter="20">
         <!-- 左侧参数调整区 -->
         <el-col :span="8">
           <el-card class="parameter-card" header="参数调整">
-            <el-form :model="simulationParams" label-width="120px">
+            <div v-if="bonusPools.length === 0" class="no-data-hint">
+              <el-empty 
+                description="暂无可用的奖金池"
+                :image-size="80"
+              >
+                <template #description>
+                  <p>暂无可用的奖金池</p>
+                  <p>请先在奖金池管理页面创建奖金池</p>
+                </template>
+                <el-button type="primary" @click="goToBonusPool">创建奖金池</el-button>
+              </el-empty>
+            </div>
+            
+            <el-form v-else :model="simulationParams" label-width="120px">
               <el-divider content-position="left">基础参数</el-divider>
               
-              <el-form-item label="奖金池">
+              <el-form-item label="奖金池" required>
                 <el-select 
                   v-model="simulationParams.bonusPoolId" 
                   placeholder="请选择奖金池"
                   @change="handlePoolChange"
+                  style="width: 100%"
                 >
                   <el-option
                     v-for="pool in bonusPools"
@@ -54,6 +79,10 @@
                     :value="pool.id"
                   />
                 </el-select>
+                <div class="param-hint">
+                  <el-icon><InfoFilled /></el-icon>
+                  选择要进行模拟分析的奖金池
+                </div>
               </el-form-item>
 
               <el-form-item label="公司利润">
@@ -476,9 +505,10 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, nextTick, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { 
-  Plus, Refresh, Setting, DataAnalysis, TrendCharts, Clock 
+  Plus, Refresh, Setting, DataAnalysis, TrendCharts, Clock, InfoFilled 
 } from '@element-plus/icons-vue'
 import * as echarts from 'echarts'
 import { 
@@ -491,6 +521,9 @@ import {
 } from '@/api/simulation'
 import { getBonusPools } from '@/api/calculation'
 import { businessLineApi } from '@/api/businessLine'
+
+// 路由
+const router = useRouter()
 
 // 响应式数据
 const loading = ref(false)
@@ -1150,6 +1183,11 @@ const formatChartValue = (value, metric) => {
   return value
 }
 
+// 导航方法
+const goToBonusPool = () => {
+  router.push('/calculation/bonus-pool')
+}
+
 // 页面加载
 onMounted(() => {
   refreshData()
@@ -1338,5 +1376,23 @@ onMounted(() => {
 
 .chart {
   width: 100%;
+}
+
+.guide-alert {
+  margin-bottom: 20px;
+}
+
+.no-data-hint {
+  padding: 20px;
+  text-align: center;
+}
+
+.param-hint {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 </style>

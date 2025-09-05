@@ -62,8 +62,13 @@
         <el-row :gutter="20">
           <el-col :span="12">
             <div class="detail-item">
-              <label>年薪：</label>
-              <span>¥{{ employee.annualSalary?.toLocaleString() }}</span>
+              <label>薪酬：</label>
+              <span v-if="canViewSalary">
+                {{ formatCurrency(employee.annualSalary) }}
+              </span>
+              <span v-else>
+                <el-tag type="warning" size="small">保密信息</el-tag>
+              </span>
             </div>
           </el-col>
           <el-col :span="12">
@@ -196,6 +201,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { Employee } from '@/api/employee'
+import { useSalaryPermission } from '@/composables/useSalaryPermission'
 
 interface Props {
   visible: boolean
@@ -209,6 +215,9 @@ interface Emits {
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
+
+// 权限控制
+const { canViewSalary, formatCurrency } = useSalaryPermission()
 
 const visible = computed({
   get: () => props.visible,

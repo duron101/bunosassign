@@ -59,14 +59,14 @@
             <el-form-item label="基准值" prop="benchmarkValue">
               <el-input-number
                 v-model="form.benchmarkValue"
-                :min="0"
-                :max="10"
+                :min="0.1"
+                :max="3.0"
                 :step="0.1"
                 :precision="2"
                 placeholder="请输入基准值"
                 style="width: 100%"
               />
-              <div class="form-tip">基准值范围：0-10，影响奖金计算权重</div>
+              <div class="form-tip">基准值范围：0.1-3.0，影响奖金计算权重</div>
             </el-form-item>
           </el-col>
         </el-row>
@@ -245,7 +245,7 @@ const rules: FormRules = {
   ],
   benchmarkValue: [
     { required: true, message: '请输入基准值', trigger: 'blur' },
-    { type: 'number', min: 0, max: 10, message: '基准值范围为 0-10', trigger: 'blur' }
+    { type: 'number', min: 0.1, max: 3.0, message: '基准值范围为 0.1-3.0', trigger: 'blur' }
   ],
   description: [
     { max: 1000, message: '岗位描述不能超过 1000 个字符', trigger: 'blur' }

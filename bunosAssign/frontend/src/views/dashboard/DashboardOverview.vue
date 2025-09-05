@@ -219,6 +219,17 @@ import {
   CaretTop, CaretBottom, Minus
 } from '@element-plus/icons-vue'
 import * as echarts from 'echarts'
+import { 
+  getDashboardOverview, 
+  getTrendData, 
+  getDistributionData,
+  type DashboardMetrics,
+  type DepartmentRanking,
+  type BonusDistribution,
+  type SystemActivity,
+  type TrendDataPoint,
+  type DistributionDataPoint
+} from '@/api/dashboard'
 
 // 响应式数据
 const loading = ref(false)
@@ -227,77 +238,30 @@ const trendType = ref('total')
 const distributionType = ref('amount')
 
 // 核心指标
-const metrics = reactive({
-  totalBonus: 15600000,
-  avgBonus: 24000,
-  utilizationRate: 0.94,
-  totalEmployees: 650,
-  bonusGrowth: 12.5,
-  avgGrowth: 8.3,
-  utilizationChange: -2.1,
-  employeeGrowth: 5.2
+const metrics = reactive<DashboardMetrics>({
+  totalBonus: 0,
+  avgBonus: 0,
+  utilizationRate: 0,
+  totalEmployees: 0,
+  bonusGrowth: 0,
+  avgGrowth: 0,
+  utilizationChange: 0,
+  employeeGrowth: 0
 })
 
 // 部门排行数据
-const departmentRanking = ref([
-  { id: 1, name: '实施部', totalBonus: 5460000 },
-  { id: 2, name: '售前部', totalBonus: 3900000 },
-  { id: 3, name: '研发部', totalBonus: 3120000 },
-  { id: 4, name: '市场部', totalBonus: 1560000 },
-  { id: 5, name: '运营部', totalBonus: 1560000 }
-])
+const departmentRanking = ref<DepartmentRanking[]>([])
 
 // 奖金分布统计
-const bonusDistribution = reactive({
-  ranges: [
-    { min: 0, max: 10000, count: 45 },
-    { min: 10000, max: 20000, count: 120 },
-    { min: 20000, max: 30000, count: 180 },
-    { min: 30000, max: 40000, count: 150 },
-    { min: 40000, max: 50000, count: 85 },
-    { min: 50000, max: 100000, count: 60 },
-    { min: 100000, max: 200000, count: 10 }
-  ],
-  median: 28500,
-  giniCoefficient: 0.285,
-  standardDeviation: 15420
+const bonusDistribution = reactive<BonusDistribution>({
+  ranges: [],
+  median: 0,
+  giniCoefficient: 0,
+  standardDeviation: 0
 })
 
 // 系统动态
-const recentActivities = ref([
-  {
-    id: 1,
-    title: '奖金计算完成',
-    description: '2025年第一季度奖金计算任务已完成',
-    user: '系统管理员',
-    timestamp: '2025-01-04 14:30',
-    type: 'success'
-  },
-  {
-    id: 2,
-    title: '新增模拟场景',
-    description: '创建了"保守分配方案"模拟场景',
-    user: '张经理',
-    timestamp: '2025-01-04 11:20',
-    type: 'primary'
-  },
-  {
-    id: 3,
-    title: '敏感性分析报告',
-    description: '完成了奖金池比例敏感性分析',
-    user: '李分析师',
-    timestamp: '2025-01-04 09:15',
-    type: 'info'
-  },
-  {
-    id: 4,
-    title: '数据导入',
-    description: '导入了150条员工绩效数据',
-    user: 'HR部门',
-    timestamp: '2025-01-03 16:45',
-    type: 'warning'
-  }
-])
+const recentActivities = ref<SystemActivity[]>([])
 
 // 图表引用
 const trendChart = ref()
@@ -313,148 +277,204 @@ const formatNumber = (num: number) => {
 const refreshData = async () => {
   loading.value = true
   try {
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    await loadDashboardData()
     ElMessage.success('数据刷新成功')
   } catch (error) {
+    console.error('刷新数据失败:', error)
     ElMessage.error('数据刷新失败')
   } finally {
     loading.value = false
   }
 }
 
+// 加载驾驶舱数据
+const loadDashboardData = async () => {
+  try {
+    const [startDate, endDate] = dateRange.value
+    const response = await getDashboardOverview({ startDate, endDate })
+    
+    if (response.code === 200 && response.data) {
+      // 更新核心指标
+      Object.assign(metrics, response.data.metrics)
+      
+      // 更新部门排行
+      departmentRanking.value = response.data.departmentRanking
+      
+      // 更新奖金分布
+      Object.assign(bonusDistribution, response.data.bonusDistribution)
+      
+      // 更新系统动态
+      recentActivities.value = response.data.recentActivities
+      
+      // 更新图表
+      nextTick(() => {
+        updateTrendChart()
+        updateDistributionChart()
+        updateHistogramChart()
+      })
+    }
+  } catch (error) {
+    console.error('加载驾驶舱数据失败:', error)
+    throw error
+  }
+}
+
 const handleDateChange = (dates: string[]) => {
   console.log('日期范围变更:', dates)
+  // 清除缓存
+  trendDataCache.value = {}
+  distributionDataCache.value = {}
   // 根据日期范围重新加载数据
   refreshData()
 }
 
+// 趋势数据缓存
+const trendDataCache = ref<Record<string, TrendDataPoint[]>>({})
+
 // 图表更新函数
-const updateTrendChart = () => {
+const updateTrendChart = async () => {
   if (!trendChart.value) return
 
   const chart = echarts.init(trendChart.value)
   
-  const mockData = {
-    total: {
-      data: [12500000, 13200000, 13800000, 14500000, 15100000, 15600000],
-      name: '总奖金(万元)'
-    },
-    avg: {
-      data: [19500, 20800, 21500, 22800, 23400, 24000],
-      name: '人均奖金(元)'
-    },
-    count: {
-      data: [580, 595, 610, 625, 640, 650],
-      name: '发放人数'
+  try {
+    // 获取趋势数据
+    if (!trendDataCache.value[trendType.value]) {
+      const response = await getTrendData({ type: trendType.value, months: 6 })
+      if (response.code === 200) {
+        trendDataCache.value[trendType.value] = response.data
+      }
     }
-  }
-
-  const currentData = mockData[trendType.value]
-  
-  chart.setOption({
-    title: {
-      text: `${currentData.name}趋势`,
-      left: 'center',
-      textStyle: { fontSize: 14 }
-    },
-    tooltip: {
-      trigger: 'axis',
-      formatter: (params: any) => {
-        const point = params[0]
-        return `${point.name}<br/>${currentData.name}: ${formatNumber(point.value)}`
-      }
-    },
-    xAxis: {
-      type: 'category',
-      data: ['2024-08', '2024-09', '2024-10', '2024-11', '2024-12', '2025-01']
-    },
-    yAxis: {
-      type: 'value',
-      axisLabel: {
-        formatter: (value: number) => {
-          if (trendType.value === 'total') {
-            return (value / 10000).toFixed(0) + '万'
+    
+    const trendData = trendDataCache.value[trendType.value] || []
+    
+    let chartData: number[]
+    let seriesName: string
+    
+    switch (trendType.value) {
+      case 'total':
+        chartData = trendData.map(d => d.totalBonus)
+        seriesName = '总奖金(万元)'
+        break
+      case 'avg':
+        chartData = trendData.map(d => d.avgBonus)
+        seriesName = '人均奖金(元)'
+        break
+      case 'count':
+        chartData = trendData.map(d => d.employeeCount)
+        seriesName = '发放人数'
+        break
+      default:
+        chartData = []
+        seriesName = '数据'
+    }
+    
+    const periods = trendData.map(d => d.period)
+    
+    chart.setOption({
+      title: {
+        text: `${seriesName}趋势`,
+        left: 'center',
+        textStyle: { fontSize: 14 }
+      },
+      tooltip: {
+        trigger: 'axis',
+        formatter: (params: any) => {
+          const point = params[0]
+          return `${point.name}<br/>${seriesName}: ${formatNumber(point.value)}`
+        }
+      },
+      xAxis: {
+        type: 'category',
+        data: periods
+      },
+      yAxis: {
+        type: 'value',
+        axisLabel: {
+          formatter: (value: number) => {
+            if (trendType.value === 'total') {
+              return (value / 10000).toFixed(0) + '万'
+            }
+            return formatNumber(value)
           }
-          return formatNumber(value)
         }
-      }
-    },
-    series: [{
-      data: currentData.data,
-      type: 'line',
-      smooth: true,
-      symbol: 'circle',
-      symbolSize: 6,
-      lineStyle: { color: '#409EFF', width: 3 },
-      areaStyle: {
-        color: {
-          type: 'linear',
-          x: 0, y: 0, x2: 0, y2: 1,
-          colorStops: [
-            { offset: 0, color: 'rgba(64, 158, 255, 0.3)' },
-            { offset: 1, color: 'rgba(64, 158, 255, 0.1)' }
-          ]
+      },
+      series: [{
+        data: chartData,
+        type: 'line',
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 6,
+        lineStyle: { color: '#409EFF', width: 3 },
+        areaStyle: {
+          color: {
+            type: 'linear',
+            x: 0, y: 0, x2: 0, y2: 1,
+            colorStops: [
+              { offset: 0, color: 'rgba(64, 158, 255, 0.3)' },
+              { offset: 1, color: 'rgba(64, 158, 255, 0.1)' }
+            ]
+          }
         }
-      }
-    }],
-    grid: { left: '10%', right: '10%', bottom: '15%', top: '20%' }
-  })
+      }],
+      grid: { left: '10%', right: '10%', bottom: '15%', top: '20%' }
+    })
+  } catch (error) {
+    console.error('更新趋势图表失败:', error)
+  }
 }
 
-const updateDistributionChart = () => {
+// 分布数据缓存
+const distributionDataCache = ref<Record<string, DistributionDataPoint[]>>({})
+
+const updateDistributionChart = async () => {
   if (!distributionChart.value) return
 
   const chart = echarts.init(distributionChart.value)
   
-  const mockData = {
-    amount: [
-      { name: '实施部', value: 5460000 },
-      { name: '售前部', value: 3900000 },
-      { name: '研发部', value: 3120000 },
-      { name: '市场部', value: 1560000 },
-      { name: '运营部', value: 1560000 }
-    ],
-    people: [
-      { name: '实施部', value: 230 },
-      { name: '售前部', value: 165 },
-      { name: '研发部', value: 140 },
-      { name: '市场部', value: 65 },
-      { name: '运营部', value: 50 }
-    ]
-  }
-
-  const currentData = mockData[distributionType.value]
-  
-  chart.setOption({
-    title: {
-      text: distributionType.value === 'amount' ? '奖金金额分布' : '人数分布',
-      left: 'center',
-      textStyle: { fontSize: 14 }
-    },
-    tooltip: {
-      trigger: 'item',
-      formatter: (params: any) => {
-        const unit = distributionType.value === 'amount' ? '元' : '人'
-        return `${params.name}<br/>${formatNumber(params.value)}${unit} (${params.percent}%)`
+  try {
+    // 获取分布数据
+    if (!distributionDataCache.value[distributionType.value]) {
+      const response = await getDistributionData({ type: distributionType.value })
+      if (response.code === 200) {
+        distributionDataCache.value[distributionType.value] = response.data
       }
-    },
-    series: [{
-      type: 'pie',
-      radius: ['30%', '70%'],
-      data: currentData,
-      emphasis: {
-        itemStyle: {
-          shadowBlur: 10,
-          shadowOffsetX: 0,
-          shadowColor: 'rgba(0, 0, 0, 0.5)'
+    }
+    
+    const currentData = distributionDataCache.value[distributionType.value] || []
+    
+    chart.setOption({
+      title: {
+        text: distributionType.value === 'amount' ? '业务线奖金金额分布' : '业务线人数分布',
+        left: 'center',
+        textStyle: { fontSize: 14 }
+      },
+      tooltip: {
+        trigger: 'item',
+        formatter: (params: any) => {
+          const unit = distributionType.value === 'amount' ? '元' : '人'
+          return `${params.name}<br/>${formatNumber(params.value)}${unit} (${params.percent}%)`
         }
       },
-      label: {
-        formatter: '{b}\n{d}%'
-      }
-    }]
-  })
+      series: [{
+        type: 'pie',
+        radius: ['30%', '70%'],
+        data: currentData,
+        emphasis: {
+          itemStyle: {
+            shadowBlur: 10,
+            shadowOffsetX: 0,
+            shadowColor: 'rgba(0, 0, 0, 0.5)'
+          }
+        },
+        label: {
+          formatter: '{b}\n{d}%'
+        }
+      }]
+    })
+  } catch (error) {
+    console.error('更新分布图表失败:', error)
+  }
 }
 
 const updateHistogramChart = () => {
@@ -513,11 +533,8 @@ onMounted(() => {
   const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1).toISOString().slice(0, 7)
   dateRange.value = [lastMonth, currentMonth]
 
-  nextTick(() => {
-    updateTrendChart()
-    updateDistributionChart()
-    updateHistogramChart()
-  })
+  // 加载数据
+  loadDashboardData()
 })
 </script>
 

@@ -4,7 +4,7 @@
     <div class="page-header">
       <div class="header-left">
         <h2>个人奖金仪表板</h2>
-        <div class="current-period">当前期间: {{ currentPeriod || '2025-01' }}</div>
+        <div class="current-period">当前期间: {{ displayCurrentPeriod }}</div>
       </div>
       <div class="header-actions">
         <el-select
@@ -14,10 +14,11 @@
           style="width: 150px; margin-right: 12px;"
         >
           <el-option
+            v-if="availablePeriods && availablePeriods.length > 0"
             v-for="period in availablePeriods"
-            :key="period.value"
-            :label="period.label"
-            :value="period.value"
+            :key="period?.value || 'default'"
+            :label="period?.label || '未知期间'"
+            :value="period?.value || ''"
           />
         </el-select>
         <el-button @click="refreshData" :loading="loading">
@@ -141,26 +142,26 @@
             <div v-if="performanceMetrics" class="performance-detail">
               <div class="performance-score">
                 <div class="score-circle">
-                  <div class="score-value">{{ (performanceMetrics.overallScore * 100).toFixed(0) }}</div>
+                  <div class="score-value">{{ ((performanceMetrics?.overallScore || 0) * 100).toFixed(0) }}</div>
                   <div class="score-label">综合评分</div>
                 </div>
               </div>
               <div class="performance-metrics">
                 <div class="metric-item">
                   <span class="metric-name">工作效率</span>
-                  <el-progress :percentage="performanceMetrics.efficiency * 100" />
+                  <el-progress :percentage="(performanceMetrics?.efficiency || 0) * 100" />
                 </div>
                 <div class="metric-item">
                   <span class="metric-name">创新能力</span>
-                  <el-progress :percentage="performanceMetrics.innovation * 100" />
+                  <el-progress :percentage="(performanceMetrics?.innovation || 0) * 100" />
                 </div>
                 <div class="metric-item">
                   <span class="metric-name">团队协作</span>
-                  <el-progress :percentage="performanceMetrics.teamwork * 100" />
+                  <el-progress :percentage="(performanceMetrics?.teamwork || 0) * 100" />
                 </div>
-                <div v-if="performanceMetrics.leadership" class="metric-item">
+                <div v-if="performanceMetrics?.leadership" class="metric-item">
                   <span class="metric-name">领导力</span>
-                  <el-progress :percentage="performanceMetrics.leadership * 100" />
+                  <el-progress :percentage="(performanceMetrics.leadership * 100)" />
                 </div>
               </div>
             </div>
@@ -170,30 +171,30 @@
 
         <el-col :span="16">
           <el-card class="detail-card" header="项目参与情况">
-            <div v-if="projectData && projectData.projectBonus.allocations.length > 0" class="project-participation">
+            <div v-if="projectData && projectData.projectBonus && projectData.projectBonus.allocations && projectData.projectBonus.allocations.length > 0" class="project-participation">
               <div class="project-summary">
                 <el-row :gutter="16">
                   <el-col :span="6">
                     <div class="summary-item">
-                      <div class="summary-value">¥{{ formatNumber(projectData.summary.totalProjectBonus) }}</div>
+                      <div class="summary-value">¥{{ formatNumber(projectData?.summary?.totalProjectBonus || 0) }}</div>
                       <div class="summary-label">项目奖金总额</div>
                     </div>
                   </el-col>
                   <el-col :span="6">
                     <div class="summary-item">
-                      <div class="summary-value">{{ projectData.summary.activeProjects }}</div>
+                      <div class="summary-value">{{ projectData?.summary?.activeProjects || 0 }}</div>
                       <div class="summary-label">参与项目数</div>
                     </div>
                   </el-col>
                   <el-col :span="6">
                     <div class="summary-item">
-                      <div class="summary-value">¥{{ formatNumber(projectData.summary.averageBonusPerProject) }}</div>
+                      <div class="summary-value">¥{{ formatNumber(projectData?.summary?.averageBonusPerProject || 0) }}</div>
                       <div class="summary-label">平均项目奖金</div>
                     </div>
                   </el-col>
                   <el-col :span="6">
                     <div class="summary-item">
-                      <div class="summary-value">{{ (projectData.summary.projectContributionRatio * 100).toFixed(1) }}%</div>
+                      <div class="summary-value">{{ ((projectData?.summary?.projectContributionRatio || 0) * 100).toFixed(1) }}%</div>
                       <div class="summary-label">项目奖金占比</div>
                     </div>
                   </el-col>
@@ -207,12 +208,12 @@
                   class="project-item"
                 >
                   <div class="project-info">
-                    <div class="project-name">{{ project.projectName }}</div>
-                    <div class="project-role">{{ project.role }}</div>
+                    <div class="project-name">{{ project?.projectName || '未知项目' }}</div>
+                    <div class="project-role">{{ project?.role || '未知角色' }}</div>
                   </div>
-                  <div class="project-bonus">¥{{ formatNumber(project.bonusAmount) }}</div>
+                  <div class="project-bonus">¥{{ formatNumber(project?.amount || 0) }}</div>
                   <div class="project-status">
-                    <el-tag :type="getProjectStatusType(project.status)">{{ project.status }}</el-tag>
+                    <el-tag :type="getProjectStatusType(project?.status || 'unknown')">{{ project?.status || 'unknown' }}</el-tag>
                   </div>
                 </div>
               </div>
@@ -255,26 +256,26 @@
                 <el-row :gutter="20">
                   <el-col :span="6">
                     <div class="comparison-stat">
-                      <div class="stat-value">{{ peerComparison.totalPeers }}</div>
+                      <div class="stat-value">{{ peerComparison?.totalPeers || 0 }}</div>
                       <div class="stat-label">对比员工数</div>
                     </div>
                   </el-col>
                   <el-col :span="6">
                     <div class="comparison-stat">
-                      <div class="stat-value">第{{ peerComparison.myPercentile }}百分位</div>
+                      <div class="stat-value">第{{ peerComparison?.myPercentile || 0 }}百分位</div>
                       <div class="stat-label">我的排名</div>
                     </div>
                   </el-col>
                   <el-col :span="6">
                     <div class="comparison-stat">
-                      <div class="stat-value">¥{{ formatNumber(peerComparison.averageBonus) }}</div>
+                      <div class="stat-value">¥{{ formatNumber(peerComparison?.averageBonus || 0) }}</div>
                       <div class="stat-label">平均奖金</div>
                     </div>
                   </el-col>
                   <el-col :span="6">
                     <div class="comparison-stat">
-                      <div class="stat-value" :class="getComparisonClass(peerComparison.comparedToAverage)">
-                        {{ peerComparison.comparedToAverage >= 0 ? '+' : '' }}{{ formatNumber(peerComparison.comparedToAverage) }}
+                      <div class="stat-value" :class="getComparisonClass(peerComparison?.comparedToAverage || 0)">
+                        {{ (peerComparison?.comparedToAverage || 0) >= 0 ? '+' : '' }}{{ formatNumber(peerComparison?.comparedToAverage || 0) }}
                       </div>
                       <div class="stat-label">与平均值差异</div>
                     </div>
@@ -284,8 +285,8 @@
               
               <div class="comparison-message">
                 <el-alert
-                  :title="peerComparison.message"
-                  :type="getPeerComparisonAlertType(peerComparison.myRanking)"
+                  :title="peerComparison?.message || '暂无对比数据'"
+                  :type="getPeerComparisonAlertType(peerComparison?.myRanking || 'average')"
                   show-icon
                   :closable="false"
                 />
@@ -350,19 +351,34 @@ const improvementSuggestions = ref<ImprovementSuggestion[]>([])
 const peerComparison = ref<PeerComparison | null>(null)
 const trendData = ref<BonusTrendResponse['data'] | null>(null)
 
+// Display current period safely
+const displayCurrentPeriod = computed(() => {
+  try {
+    return currentPeriod.value || '2025-01'
+  } catch (error) {
+    console.error('Error getting current period:', error)
+    return '2025-01'
+  }
+})
+
 // Available periods for selection
 const availablePeriods = computed(() => {
-  const periods = []
-  const now = new Date()
-  
-  for (let i = 0; i < 12; i++) {
-    const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
-    const value = date.toISOString().slice(0, 7)
-    const label = `${date.getFullYear()}年${String(date.getMonth() + 1).padStart(2, '0')}月`
-    periods.push({ value, label })
+  try {
+    const periods = []
+    const now = new Date()
+    
+    for (let i = 0; i < 12; i++) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const value = date.toISOString().slice(0, 7)
+      const label = `${date.getFullYear()}年${String(date.getMonth() + 1).padStart(2, '0')}月`
+      periods.push({ value, label })
+    }
+    
+    return periods
+  } catch (error) {
+    console.error('Error computing available periods:', error)
+    return []
   }
-  
-  return periods
 })
 
 // Utility functions

@@ -37,6 +37,13 @@ class PersonalBonusService {
       // 尝试获取关联的员工记录
       const employee = await this.getEmployeeByUserId(userId)
       
+      console.log(`🔍 getEmployeeByUserId 返回结果:`, {
+        employeeFound: !!employee,
+        employeeId: employee?._id,
+        employeeName: employee?.name,
+        employeeNo: employee?.employeeNo
+      })
+      
       // 如果没有当前期间，获取最新期间
       if (!period) {
         period = await this.getCurrentPeriod()
@@ -52,9 +59,24 @@ class PersonalBonusService {
           departmentId: employee.departmentId,
           positionId: employee.positionId
         })
+        
+        // 获取部门和岗位信息
+        const department = await this.getDepartmentInfo(employee.departmentId)
+        const position = await this.getPositionInfo(employee.positionId)
+        
+        // 将部门和岗位信息添加到员工对象中
+        employee.department = department
+        employee.position = position
       } else {
         console.warn(`⚠️ 未找到用户 ${userId} 对应的员工记录`)
       }
+
+      console.log(`🔍 构建结果对象前的状态:`, {
+        employeeExists: !!employee,
+        employeeId: employee?._id,
+        employeeName: employee?.name,
+        employeeNo: employee?.employeeNo
+      })
 
       const result = {
         user: {
@@ -65,19 +87,28 @@ class PersonalBonusService {
         },
         employee: employee ? {
           id: employee._id,
+          employeeNumber: employee.employeeNo, // 前端期望 employeeNumber
           name: employee.name,
-          employeeNo: employee.employeeNo,
-          department: await this.getDepartmentInfo(employee.departmentId),
-          position: await this.getPositionInfo(employee.positionId),
-          businessLine: await this.getBusinessLineInfo(employee.businessLineId),
-          hireDate: employee.hireDate,
-          status: employee.status
+          departmentId: employee.departmentId,
+          departmentName: employee.department ? employee.department.name : null, // 前端期望 departmentName
+          positionId: employee.positionId,
+          positionName: employee.position ? employee.position.name : null, // 前端期望 positionName
+          level: employee.position ? employee.position.level : null,
+          status: employee.status,
+          joinDate: employee.hireDate || employee.entryDate, // 前端期望 joinDate
+          userId: employee.userId
         } : null,
         currentPeriod: period,
         bonusData: await this.calculateBonusData(userId, employee, period),
         historicalData: await this.getBonusHistory(userId, employee?._id, 5), // 最近5期
         performanceMetrics: employee ? await this.getPerformanceMetrics(employee._id, period) : null
       }
+
+      console.log(`🔍 构建结果对象后的状态:`, {
+        resultEmployeeExists: !!result.employee,
+        resultEmployeeId: result.employee?._id,
+        resultEmployeeName: result.employee?.name
+      })
 
       console.log(`💰 奖金数据汇总:`, {
         totalBonus: result.bonusData.totalBonus,
@@ -168,40 +199,138 @@ class PersonalBonusService {
 
   /**
    * 获取个人奖金历史
-   * @param {string} employeeId - 员工ID
+   * @param {string} userId - 用户ID
    * @param {Object} options - 查询选项
    * @returns {Object} 奖金历史信息
    */
-  async getPersonalBonusHistory(employeeId, options = {}) {
+  async getPersonalBonusHistory(userId, options = {}) {
     try {
-      const { startDate, endDate, page = 1, limit = 10 } = options
+      console.log(`🔍 getPersonalBonusHistory 开始: userId=${userId}, options=`, options)
+      
+      // 首先获取用户和员工信息
+      const user = await nedbService.getUserById(userId)
+      if (!user) {
+        console.log(`❌ 用户不存在: ${userId}`)
+        throw new Error(`用户不存在: ${userId}`)
+      }
+      console.log(`✅ 找到用户: ${user.username}`)
 
-      // 构建查询条件
-      const query = { employeeId }
+      // 获取员工信息
+      const employee = await this.getEmployeeByUserId(userId)
+      if (!employee) {
+        console.log(`⚠️ 未找到员工信息，返回默认结果`)
+        // 如果没有员工信息，返回包含用户信息但员工为null的结果
+        return {
+          user: {
+            id: user._id,
+            username: user.username,
+            realName: user.realName,
+            email: user.email
+          },
+          employee: null,
+          history: [],
+          summary: {
+            totalBonus: 0,
+            totalAllocations: 0,
+            averageBonus: 0
+          },
+          pagination: {
+            page: 1,
+            limit: 10,
+            total: 0,
+            pages: 0
+          }
+        }
+      }
+      console.log(`✅ 找到员工: ${employee.name}`)
+
+      const { startDate, endDate, page = 1, limit = 10 } = options
+      console.log(`📊 查询参数: startDate=${startDate}, endDate=${endDate}, page=${page}, limit=${limit}`)
+
+      // 构建查询条件 - 使用正确的集合和字段
+      const query = { employeeId: employee._id }
       if (startDate || endDate) {
         query.createdAt = {}
         if (startDate) query.createdAt.$gte = new Date(startDate)
         if (endDate) query.createdAt.$lte = new Date(endDate)
       }
+      console.log(`🔍 查询条件:`, query)
+      console.log(`🔍 员工ID: ${employee._id}`)
+      console.log(`🔍 员工姓名: ${employee.name}`)
 
-      // 获取奖金分配记录
-      const allocations = await global.nedbService.getBonusAllocations(query)
+      // 尝试从不同的集合获取奖金分配记录
+      let allocations = []
+      
+      // 首先尝试从 bonusAllocationResults 集合查询
+      console.log(`🔍 尝试从 bonusAllocationResults 集合查询...`)
+      try {
+        allocations = await nedbService.find('bonusAllocationResults', query)
+        console.log(`✅ 从 bonusAllocationResults 找到 ${allocations.length} 条记录`)
+        if (allocations.length > 0) {
+          console.log(`🔍 第一条记录示例:`, {
+            _id: allocations[0]._id,
+            employeeId: allocations[0].employeeId,
+            allocationPeriod: allocations[0].allocationPeriod,
+            totalAmount: allocations[0].totalAmount
+          })
+        }
+      } catch (error) {
+        console.error(`❌ 查询 bonusAllocationResults 失败:`, error)
+        console.error(`❌ 错误堆栈:`, error.stack)
+        throw error
+      }
+
+      // 如果没有找到，尝试从 projectBonusAllocations 集合查询
+      if (allocations.length === 0) {
+        console.log(`🔍 尝试从 projectBonusAllocations 集合查询...`)
+        try {
+          allocations = await nedbService.find('projectBonusAllocations', query)
+          console.log(`✅ 从 projectBonusAllocations 找到 ${allocations.length} 条记录`)
+        } catch (error) {
+          console.warn(`⚠️ 查询 projectBonusAllocations 失败:`, error.message)
+        }
+      }
+
+      // 如果还是没有找到，尝试从 bonusAllocations 集合查询
+      if (allocations.length === 0) {
+        console.log(`🔍 尝试从 bonusAllocations 集合查询...`)
+        try {
+          allocations = await nedbService.find('bonusAllocations', query)
+          console.log(`✅ 从 bonusAllocations 找到 ${allocations.length} 条记录`)
+        } catch (error) {
+          console.warn(`⚠️ 查询 bonusAllocations 失败:`, error.message)
+        }
+      }
+
+      console.log(`📊 总共找到 ${allocations.length} 条奖金分配记录`)
       const total = allocations.length
 
       // 分页
       const startIndex = (page - 1) * limit
       const endIndex = startIndex + limit
       const paginatedAllocations = allocations.slice(startIndex, endIndex)
+      console.log(`📄 分页结果: ${startIndex}-${endIndex}, 共 ${paginatedAllocations.length} 条`)
 
       // 获取项目信息
-      const projectIds = [...new Set(paginatedAllocations.map(a => a.projectId))]
+      const projectIds = [...new Set(paginatedAllocations.map(a => a.projectId).filter(Boolean))]
+      console.log(`🔍 需要查询的项目ID:`, projectIds)
+      
       const projects = await Promise.all(
-        projectIds.map(id => global.nedbService.getProjectById(id))
+        projectIds.map(async (id) => {
+          try {
+            const project = await nedbService.findOne('projects', { _id: id })
+            return project
+          } catch (error) {
+            console.warn(`⚠️ 查询项目 ${id} 失败:`, error.message)
+            return null
+          }
+        })
       )
+      console.log(`✅ 成功查询 ${projects.filter(p => p).length} 个项目信息`)
 
       // 组装数据
       const history = paginatedAllocations.map(allocation => {
-        const project = projects.find(p => p._id === allocation.projectId)
+        const project = projects.find(p => p && p._id === allocation.projectId)
         return {
           ...allocation,
           projectName: project?.name || '未知项目',
@@ -209,8 +338,30 @@ class PersonalBonusService {
         }
       })
 
-      return {
+      // 计算汇总信息
+      const totalBonus = allocations.reduce((sum, a) => sum + (a.amount || a.bonusAmount || 0), 0)
+      const averageBonus = total > 0 ? totalBonus / total : 0
+
+      const result = {
+        user: {
+          id: user._id,
+          username: user.username,
+          realName: user.realName,
+          email: user.email
+        },
+        employee: {
+          id: employee._id,
+          name: employee.name,
+          employeeNo: employee.employeeNo,
+          departmentId: employee.departmentId,
+          positionId: employee.positionId
+        },
         history,
+        summary: {
+          totalBonus,
+          totalAllocations: total,
+          averageBonus
+        },
         pagination: {
           page: parseInt(page),
           limit: parseInt(limit),
@@ -218,7 +369,13 @@ class PersonalBonusService {
           pages: Math.ceil(total / limit)
         }
       }
+
+      console.log(`✅ getPersonalBonusHistory 完成: 返回 ${history.length} 条历史记录`)
+      return result
+      
     } catch (error) {
+      console.error(`❌ getPersonalBonusHistory 失败:`, error)
+      console.error(`❌ 错误堆栈:`, error.stack)
       logger.error('获取个人奖金历史失败:', error)
       throw error
     }
@@ -698,12 +855,28 @@ class PersonalBonusService {
   }
 
   /**
-   * 计算奖金数据
+   * 计算个人奖金数据
    */
   async calculateBonusData(userId, employee, period) {
     try {
-      const regularBonus = await this.getRegularBonus(userId, employee?.employeeNo, period)
-      const projectBonus = await this.getProjectBonus(userId, employee?._id, period)
+      // 如果员工信息不存在，返回默认值
+      if (!employee) {
+        console.log(`⚠️ 员工信息不存在，返回默认奖金数据`)
+        return {
+          regularBonus: null,
+          projectBonus: null,
+          totalBonus: 0,
+          bonusBreakdown: {
+            profitContribution: 0,
+            positionValue: 0,
+            performance: 0,
+            projectBonus: 0
+          }
+        }
+      }
+
+      const regularBonus = await this.getRegularBonus(userId, employee.employeeNo, period)
+      const projectBonus = await this.getProjectBonus(userId, employee._id, period)
 
       // 计算总奖金
       const totalBonus = (regularBonus?.totalAmount || 0) + (projectBonus?.totalAmount || 0)
@@ -713,7 +886,7 @@ class PersonalBonusService {
         profitContribution: regularBonus?.profitContribution || 0,
         positionValue: regularBonus?.positionValue || 0,
         performance: regularBonus?.performance || 0,
-        project: projectBonus?.totalAmount || 0
+        projectBonus: projectBonus?.totalAmount || 0  // 前端期望 projectBonus
       }
 
       return {
@@ -732,7 +905,7 @@ class PersonalBonusService {
           profitContribution: 0,
           positionValue: 0,
           performance: 0,
-          project: 0
+          projectBonus: 0
         }
       }
     }
@@ -745,37 +918,78 @@ class PersonalBonusService {
    */
   async getEmployeeByUserId(userId) {
     try {
-      // 方法1: 通过用户名匹配员工记录
+      console.log(`🔍 开始查找用户 ${userId} 关联的员工记录`)
+      
+      // 获取用户信息
       const user = await nedbService.getUserById(userId)
-      if (user && user.username) {
-        // 尝试通过用户名匹配员工工号或姓名
-        let employee = await nedbService.findOne('employees', { employeeNo: user.username })
-        if (!employee) {
-          employee = await nedbService.findOne('employees', { name: user.realName || user.username })
-        }
-        if (employee) {
-          return employee
-        }
+      console.log(`👤 查询到的用户信息:`, {
+        userId: userId,
+        userFound: !!user,
+        username: user?.username,
+        realName: user?.realName,
+        email: user?.email,
+        employeeId: user?.employeeId
+      })
+      
+      if (!user || !user.username) {
+        console.log(`❌ 未找到用户信息或用户名为空`)
+        return null
       }
 
-      // 方法2: 如果用户表中有employeeId字段
-      if (user && user.employeeId) {
+      // 方法1: 优先通过用户表中的employeeId字段直接关联
+      if (user.employeeId) {
+        console.log(`🔗 尝试通过employeeId直接关联: ${user.employeeId}`)
         const employee = await nedbService.getEmployeeById(user.employeeId)
         if (employee) {
+          console.log(`✅ 通过employeeId找到员工: ${employee.name}`)
           return employee
+        } else {
+          console.log(`⚠️ employeeId ${user.employeeId} 对应的员工不存在`)
         }
       }
 
-      // 方法3: 通过邮箱匹配
-      if (user && user.email) {
-        const employee = await nedbService.findOne('employees', { email: user.email })
-        if (employee) {
-          return employee
+      // 方法2: 通过用户名作为员工工号(employeeNo)匹配
+      console.log(`🔍 尝试通过用户名作为员工工号匹配: ${user.username}`)
+      const employee = await nedbService.findOne('employees', { employeeNo: user.username })
+      if (employee) {
+        console.log(`✅ 通过用户名匹配到员工: ${employee.name} (工号: ${employee.employeeNo})`)
+        // 找到匹配的员工后，更新用户表的employeeId字段，建立关联
+        await nedbService.updateUser(userId, { employeeId: employee._id })
+        console.log(`🔗 已建立用户-员工关联: ${user.username} -> ${employee.name}`)
+        return employee
+      }
+
+      // 方法3: 如果用户表中有realName字段，使用realName匹配员工姓名
+      if (user.realName) {
+        console.log(`🔍 尝试通过realName匹配员工姓名: ${user.realName}`)
+        const employeeByName = await nedbService.findOne('employees', { name: user.realName })
+        if (employeeByName) {
+          console.log(`✅ 通过realName匹配到员工: ${employeeByName.name}`)
+          // 找到匹配的员工后，更新用户表的employeeId字段，建立关联
+          await nedbService.updateUser(userId, { employeeId: employeeByName._id })
+          console.log(`🔗 已建立用户-员工关联: ${user.username} -> ${employeeByName.name}`)
+          return employeeByName
         }
       }
 
+      // 方法4: 通过邮箱匹配
+      if (user.email) {
+        console.log(`🔍 尝试通过邮箱匹配: ${user.email}`)
+        const employeeByEmail = await nedbService.findOne('employees', { email: user.email })
+        if (employeeByEmail) {
+          console.log(`✅ 通过邮箱匹配到员工: ${employeeByEmail.name}`)
+          // 找到匹配的员工后，更新用户表的employeeId字段，建立关联
+          await nedbService.updateUser(userId, { employeeId: employeeByEmail._id })
+          console.log(`🔗 已建立用户-员工关联: ${user.username} -> ${employeeByEmail.name}`)
+          return employeeByEmail
+        }
+      }
+
+      // 如果都没有找到，记录日志并返回null
+      console.log(`❌ 用户 ${userId} 未找到关联的员工记录`)
       return null
     } catch (error) {
+      console.error(`❌ 获取用户关联员工记录失败:`, error)
       logger.error('获取用户关联员工记录失败:', error)
       return null
     }
@@ -971,7 +1185,13 @@ class PersonalBonusService {
       return {
         totalAmount: Math.round(totalAmount * 100) / 100,
         projectCount: currentPeriodAllocations.length,
-        allocations: currentPeriodAllocations,
+        allocations: currentPeriodAllocations.map(allocation => ({
+          projectId: allocation.projectId,
+          projectName: allocation.projectName,
+          amount: allocation.bonusAmount, // 前端API类型定义期望 amount
+          role: allocation.role || '成员',
+          status: allocation.status || 'active'
+        })),
         period
       }
     } catch (error) {

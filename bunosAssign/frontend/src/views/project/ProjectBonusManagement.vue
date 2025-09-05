@@ -623,20 +623,21 @@ const loadPoolList = async () => {
     // 备用模拟数据（如果API失败）
     if (!response.data || response.data.length === 0) {
       // 模拟数据
-    poolList.value = [
-      {
-        _id: '1',
-        projectId: 'proj1',
-        projectName: '电商平台升级',
-        projectCode: 'PROJ001',
-        period: '2024Q4',
-        totalAmount: 100000,
-        profitRatio: 0.2,
-        memberCount: 8,
-        status: 'pending',
-        createdAt: new Date()
-      }
-    ]
+      poolList.value = [
+        {
+          _id: '1',
+          projectId: 'proj1',
+          projectName: '电商平台升级',
+          projectCode: 'PROJ001',
+          period: '2024Q4',
+          totalAmount: 100000,
+          profitRatio: 0.2,
+          memberCount: 8,
+          status: 'pending',
+          createdAt: new Date()
+        }
+      ]
+    }
   } catch (error) {
     ElMessage.error('加载奖金池列表失败: ' + error.message)
   } finally {

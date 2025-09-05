@@ -70,12 +70,12 @@ const employeeSchemas = {
   }),
   
   update: Joi.object({
-    name: Joi.string().min(2).max(50),
-    departmentId: Joi.string(),
-    positionId: Joi.string(),
-    annualSalary: Joi.number().positive(),
-    entryDate: Joi.date(),
-    status: Joi.number().integer().valid(0, 1),
+    name: Joi.string().min(2).max(50).required(),
+    departmentId: Joi.string().required(),
+    positionId: Joi.string().required(),
+    annualSalary: Joi.number().positive().required(),
+    entryDate: Joi.date().required(),
+    status: Joi.number().integer().valid(0, 1).optional(),
     phone: Joi.string().pattern(/^1[3-9]\d{9}$/).allow('', null).optional(),
     email: Joi.string().email().max(100).allow('', null).optional(),
     idCard: Joi.string().max(18).allow('', null).optional(),

@@ -54,7 +54,7 @@ const router = express.Router()
  *                   type: string
  *                   example: "登录成功"
  */
-router.post('/login', validate(userSchemas.login), authController.login)
+router.post('/login', validate(userSchemas.login), (req, res, next) => authController.login(req, res, next))
 
 /**
  * @swagger
@@ -96,7 +96,7 @@ router.post('/login', validate(userSchemas.login), authController.login)
  *       201:
  *         description: 注册成功
  */
-router.post('/register', validate(userSchemas.register), authController.register)
+router.post('/register', validate(userSchemas.register), (req, res, next) => authController.register(req, res, next))
 
 /**
  * @swagger
@@ -121,7 +121,7 @@ router.post('/register', validate(userSchemas.register), authController.register
  *       200:
  *         description: 刷新成功
  */
-router.post('/refresh', authController.refreshToken)
+router.post('/refresh', (req, res, next) => authController.refreshToken(req, res, next))
 
 /**
  * @swagger
@@ -136,7 +136,7 @@ router.post('/refresh', authController.refreshToken)
  *       200:
  *         description: 获取成功
  */
-router.get('/me', authenticateToken, authController.me)
+router.get('/me', authenticateToken, (req, res, next) => authController.me(req, res, next))
 
 /**
  * @swagger

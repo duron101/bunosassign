@@ -80,7 +80,7 @@ const businessLineSchemas = {
  *         description: 获取成功
  */
 router.get('/', 
-  authorize(['business-line:view']),
+  authorize(['business_line:view']),
   logOperation('查看', '业务线列表'),
   businessLineController.getBusinessLines
 )
@@ -108,7 +108,7 @@ router.get('/',
  *         description: 业务线不存在
  */
 router.get('/:id', 
-  authorize(['business-line:view']),
+  authorize(['business_line:view']),
   logOperation('查看', '业务线详情'),
   businessLineController.getBusinessLine
 )
@@ -139,7 +139,7 @@ router.get('/:id',
  *         description: 获取成功
  */
 router.get('/:id/performance', 
-  authorize(['business-line:view']),
+  authorize(['business_line:view']),
   logOperation('查看', '业务线绩效'),
   businessLineController.getPerformanceStats
 )
@@ -158,7 +158,7 @@ router.get('/:id/performance',
  *         description: 获取成功
  */
 router.get('/statistics', 
-  authorize(['business-line:view']),
+  authorize(['business_line:view']),
   logOperation('查看', '业务线统计'),
   businessLineController.getBusinessLineStats
 )
@@ -216,7 +216,7 @@ router.get('/statistics',
  *         description: 请求参数错误
  */
 router.post('/', 
-  authorize(['business-line:create']),
+  authorize(['business_line:create']),
   validate(businessLineSchemas.create),
   logOperation('创建', '业务线'),
   businessLineController.createBusinessLine
@@ -245,7 +245,7 @@ router.post('/',
  *         description: 业务线不存在
  */
 router.put('/:id', 
-  authorize(['business-line:update']),
+  authorize(['business_line:update']),
   validate(businessLineSchemas.update),
   logOperation('更新', '业务线'),
   businessLineController.updateBusinessLine
@@ -274,7 +274,7 @@ router.put('/:id',
  *         description: 业务线不存在
  */
 router.delete('/:id', 
-  authorize(['business-line:delete']),
+  authorize(['business_line:delete']),
   logOperation('删除', '业务线'),
   businessLineController.deleteBusinessLine
 )
@@ -293,7 +293,7 @@ router.delete('/:id',
  *         description: 此功能已废弃
  */
 router.post('/batch', 
-  authorize(['business-line:update']),
+  authorize(['business_line:update']),
   logOperation('批量操作', '业务线'),
   (req, res) => {
     res.status(410).json({

@@ -84,24 +84,40 @@
         <el-table-column prop="name" label="姓名" width="100" />
         <el-table-column label="部门" width="120">
           <template #default="{ row }">
-            {{ row.Department?.name || '-' }}
+            {{ row.department?.name || '-' }}
           </template>
         </el-table-column>
         <el-table-column label="岗位" width="120">
           <template #default="{ row }">
-            {{ row.Position?.name || '-' }}
+            {{ row.position?.name || '-' }}
           </template>
         </el-table-column>
         <el-table-column label="职级" width="100">
           <template #default="{ row }">
-            {{ row.Position?.level || '-' }}
+            {{ row.position?.level || '-' }}
           </template>
         </el-table-column>
         <el-table-column prop="phone" label="电话" width="120" />
         <el-table-column prop="email" label="邮箱" width="180" />
-        <el-table-column label="年薪" width="120">
+        <!-- 薪酬列（根据权限动态显示） -->
+        <el-table-column 
+          v-if="canViewSalary" 
+          label="年薪" 
+          width="120"
+        >
           <template #default="{ row }">
-            ¥{{ row.annualSalary?.toLocaleString() }}
+            {{ formatCurrency(row.annualSalary) }}
+          </template>
+        </el-table-column>
+        
+        <!-- 无权限时显示占位符列 -->
+        <el-table-column 
+          v-else 
+          label="薪酬" 
+          width="120"
+        >
+          <template #default>
+            <el-tag type="info" size="small">保密</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="entryDate" label="入职日期" width="120" />
@@ -184,6 +200,7 @@ import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Download, ArrowDown } from '@element-plus/icons-vue'
 import { shouldShowError } from '@/utils/error-handler'
+import { useSalaryPermission } from '@/composables/useSalaryPermission'
 // API导入
 import {
   getEmployees,
@@ -198,6 +215,9 @@ import EmployeeDetailDialog from './components/EmployeeDetailDialog.vue'
 import EmployeeFormDialog from './components/EmployeeFormDialog.vue'
 import EmployeeResignDialog from './components/EmployeeResignDialog.vue'
 import EmployeeTransferDialog from './components/EmployeeTransferDialog.vue'
+
+// 权限控制
+const { canViewSalary, formatCurrency } = useSalaryPermission()
 
 // 路由实例
 const route = useRoute()

@@ -3,12 +3,27 @@
     <div class="page-header">
       <h2>个人奖金查询</h2>
       <div class="header-actions">
-        <el-button type="primary" @click="showExportDialog">
+        <el-button 
+          type="primary" 
+          @click="showExportDialog"
+          :disabled="!canExportReport"
+        >
           <el-icon><Download /></el-icon>
           导出报告
         </el-button>
       </div>
     </div>
+
+    <!-- 权限提示 -->
+    <el-card v-if="getPermissionTip" class="permission-tip-card">
+      <el-alert
+        :title="getPermissionTip"
+        type="info"
+        :closable="false"
+        show-icon
+        center
+      />
+    </el-card>
 
     <!-- 查询条件 -->
     <el-card class="search-card">
@@ -26,21 +41,28 @@
         <el-form-item label="员工工号">
           <el-input
             v-model="searchForm.employeeId"
-            placeholder="请输入员工工号"
+            :placeholder="!salaryPermission.canViewOthersSalary.value ? '自动填入您的工号' : '请输入员工工号'"
             style="width: 200px"
             clearable
+            :readonly="!salaryPermission.canViewOthersSalary.value"
           />
         </el-form-item>
         <el-form-item label="员工姓名">
           <el-input
             v-model="searchForm.employeeName"
-            placeholder="请输入员工姓名"
+            :placeholder="!salaryPermission.canViewOthersSalary.value ? '自动填入您的姓名' : '请输入员工姓名'"
             style="width: 200px"
             clearable
+            :readonly="!salaryPermission.canViewOthersSalary.value"
           />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="handleSearch" :loading="searching">
+          <el-button 
+            type="primary" 
+            @click="handleSearch" 
+            :loading="searching"
+            :disabled="!canSearchPersonalBonus"
+          >
             <el-icon><Search /></el-icon>
             查询
           </el-button>
@@ -268,13 +290,25 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, nextTick } from 'vue'
+import { ref, reactive, nextTick, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import {
   Download, Search, RefreshLeft, Money, Wallet, TrendCharts,
   InfoFilled, SuccessFilled, WarningFilled
 } from '@element-plus/icons-vue'
 import * as echarts from 'echarts'
+import { useSalaryPermission } from '@/composables/useSalaryPermission'
+import { useProjectPermissions } from '@/composables/useProjectPermissions'
+import { useUserStore } from '@/store/modules/user'
+
+// 权限控制
+const userStore = useUserStore()
+
+// 初始化权限检查 - 默认员工可以查看自己的奖金
+const salaryPermission = useSalaryPermission({ 
+  isViewingOwnData: true 
+})
+const projectPermission = useProjectPermissions()
 
 // 响应式数据
 const searching = ref(false)
@@ -282,11 +316,55 @@ const exporting = ref(false)
 const hasSearched = ref(false)
 const exportDialogVisible = ref(false)
 
+// 权限检查
+const canSearchPersonalBonus = computed(() => {
+  return salaryPermission.canViewOwnSalary.value || salaryPermission.canViewOthersSalary.value
+})
+
+const canExportReport = computed(() => {
+  return salaryPermission.canViewSalary.value
+})
+
+// 检查是否可以查看指定员工的奖金信息
+const canViewTargetEmployeeBonus = (targetEmployeeId?: string) => {
+  if (!targetEmployeeId) return salaryPermission.canViewOwnSalary.value
+  return salaryPermission.canViewEmployeeSalary(targetEmployeeId)
+}
+
+// 获取权限提示信息
+const getPermissionTip = computed(() => {
+  if (!userStore.user) {
+    return '请先登录系统'
+  }
+  
+  if (salaryPermission.canViewOwnSalary.value) {
+    if (salaryPermission.canViewOthersSalary.value) {
+      return '您可以查看所有员工的奖金信息'
+    } else {
+      return '您可以查看自己的奖金信息'
+    }
+  }
+  
+  return '您暂无奖金查看权限，请联系管理员'
+})
+
 // 表单数据
 const searchForm = reactive({
   period: '',
   employeeId: '',
   employeeName: ''
+})
+
+// 初始化表单 - 如果是普通员工，自动填入自己的工号
+onMounted(() => {
+  // 如果只能查看自己的奖金，自动填入自己的信息
+  if (salaryPermission.canViewOwnSalary.value && !salaryPermission.canViewOthersSalary.value) {
+    const currentUser = userStore.user
+    if (currentUser) {
+      searchForm.employeeId = currentUser.employeeId || currentUser.employeeNumber || ''
+      searchForm.employeeName = currentUser.name || currentUser.username || ''
+    }
+  }
 })
 
 const exportForm = reactive({
@@ -314,94 +392,154 @@ const formatPeriod = (period: string) => {
 
 // 事件处理
 const handleSearch = async () => {
+  // 权限检查
+  if (!canSearchPersonalBonus.value) {
+    ElMessage.error(getPermissionTip.value)
+    return
+  }
+
   if (!searchForm.period) {
     ElMessage.warning('请选择查询期间')
     return
   }
 
+  // 如果只能查看自己奖金，验证查询的是否是自己
+  if (!salaryPermission.canViewOthersSalary.value) {
+    const currentUser = userStore.user
+    const isQueryingSelf = 
+      searchForm.employeeId === (currentUser?.employeeId || currentUser?.employeeNumber) ||
+      searchForm.employeeName === (currentUser?.name || currentUser?.username)
+    
+    if (!isQueryingSelf) {
+      ElMessage.error('您只能查看自己的奖金信息')
+      return
+    }
+  }
+
   if (!searchForm.employeeId && !searchForm.employeeName) {
-    ElMessage.warning('请输入员工工号或姓名')
-    return
+    // 如果没有输入员工信息但只能查看自己的奖金，自动使用当前用户信息
+    if (!salaryPermission.canViewOthersSalary.value) {
+      const currentUser = userStore.user
+      if (currentUser) {
+        searchForm.employeeId = currentUser.employeeId || currentUser.employeeNumber || ''
+        searchForm.employeeName = currentUser.name || currentUser.username || ''
+      }
+    } else {
+      ElMessage.warning('请输入员工工号或姓名')
+      return
+    }
   }
 
   searching.value = true
   hasSearched.value = true
 
   try {
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 1500))
-
-    // 模拟数据
+    // 调用真实API获取个人奖金信息
+    const { 
+      getPersonalBonusOverview,
+      getBonusTrend,
+      getPerformanceDetail,
+      getPeerComparison
+    } = await import('@/api/personalBonus')
+    
+    // 获取个人奖金概览
+    const overviewResponse = await getPersonalBonusOverview(searchForm.period)
+    
+    if (!overviewResponse || overviewResponse.code !== 200) {
+      throw new Error(overviewResponse?.message || '获取个人奖金信息失败')
+    }
+    
+    const overviewData = overviewResponse.data
+    
+    // 获取奖金趋势分析  
+    const trendResponse = await getBonusTrend(6)
+    const trendData = trendResponse?.data
+    
+    // 获取绩效详情
+    const performanceResponse = await getPerformanceDetail(searchForm.period)
+    const performanceData = performanceResponse?.data
+    
+    // 获取同级别对比
+    const comparisonResponse = await getPeerComparison(searchForm.period)
+    const comparisonData = comparisonResponse?.data
+    
+    // 组装前端需要的数据结构
     bonusInfo.value = {
-      employeeId: searchForm.employeeId || 'EMP001',
-      employeeName: searchForm.employeeName || '张三',
-      department: '实施部',
-      position: '高级实施顾问',
-      businessLine: '实施',
-      totalBonus: 28500,
-      baseBonus: 15000,
-      performanceBonus: 13500,
-      totalScore: 85.6,
-      bonusRatio: 1.425,
-      baseAmount: 20000,
+      employeeId: overviewData.employee?.employeeNumber || searchForm.employeeId || 'N/A',
+      employeeName: overviewData.employee?.name || searchForm.employeeName || 'N/A',
+      department: overviewData.employee?.departmentName || 'N/A',
+      position: overviewData.employee?.positionName || 'N/A', 
+      businessLine: 'N/A', // 如果API返回了业务线信息可以使用
+      totalBonus: overviewData.bonusData?.totalBonus || 0,
+      baseBonus: overviewData.bonusData?.bonusBreakdown?.positionValue || 0,
+      performanceBonus: overviewData.bonusData?.bonusBreakdown?.performance || 0,
+      totalScore: performanceData?.performanceMetrics?.overallScore || 0,
+      bonusRatio: overviewData.bonusData?.totalBonus > 0 ? 
+        (overviewData.bonusData.totalBonus / 20000) : 0, // 假设基准为20000
+      baseAmount: 20000, // 基准金额
       calculationDetails: [
         {
           dimension: '利润贡献度',
-          score: 88.5,
+          score: (overviewData.bonusData?.bonusBreakdown?.profitContribution / 100) || 0,
           weight: 0.4,
-          weightedScore: 35.4,
-          amount: 11400,
+          weightedScore: (overviewData.bonusData?.bonusBreakdown?.profitContribution / 100 * 0.4) || 0,
+          amount: overviewData.bonusData?.bonusBreakdown?.profitContribution || 0,
           description: '基于项目收益和客户满意度'
         },
         {
           dimension: '岗位价值',
-          score: 82.0,
+          score: (overviewData.bonusData?.bonusBreakdown?.positionValue / 100) || 0,
           weight: 0.3,
-          weightedScore: 24.6,
-          amount: 8200,
+          weightedScore: (overviewData.bonusData?.bonusBreakdown?.positionValue / 100 * 0.3) || 0,
+          amount: overviewData.bonusData?.bonusBreakdown?.positionValue || 0,
           description: '根据岗位职级和技能要求'
         },
         {
           dimension: '绩效表现',
-          score: 87.2,
+          score: (overviewData.bonusData?.bonusBreakdown?.performance / 100) || 0,
           weight: 0.3,
-          weightedScore: 26.16,
-          amount: 8900,
+          weightedScore: (overviewData.bonusData?.bonusBreakdown?.performance / 100 * 0.3) || 0,
+          amount: overviewData.bonusData?.bonusBreakdown?.performance || 0,
           description: '个人KPI完成情况'
         }
       ],
       compared: {
-        monthlyGrowth: 12.8,
-        yearlyGrowth: 15.6,
-        departmentRanking: 15,
-        companyRanking: 85
+        monthlyGrowth: trendData?.trendAnalysis?.growthRate ? 
+          (trendData.trendAnalysis.growthRate * 100).toFixed(1) : 0,
+        yearlyGrowth: 0, // 需要计算年度增长率
+        departmentRanking: 'N/A', // 部门排名
+        companyRanking: comparisonData?.comparison?.myPercentile || 'N/A'
       },
       insights: [
         {
           id: 1,
-          type: 'success',
-          text: '本月奖金较上月增长12.8%，表现优秀'
+          type: trendData?.trendAnalysis?.trend === 'rising' ? 'success' : 'info',
+          text: trendData?.trendAnalysis?.message || '暂无趋势分析数据'
         },
         {
           id: 2,
           type: 'info',
-          text: '利润贡献度得分88.5分，在部门中排名前20%'
+          text: `当前奖金为 ¥${formatNumber(overviewData.bonusData?.totalBonus || 0)}`
         },
         {
           id: 3,
-          type: 'warning',
-          text: '岗位价值得分相对较低，建议提升专业技能'
+          type: comparisonData?.comparison?.myRanking === 'top' ? 'success' : 
+                 comparisonData?.comparison?.myRanking === 'bottom' ? 'warning' : 'info',
+          text: comparisonData?.comparison?.message || '暂无对比数据'
         }
       ]
     }
 
     nextTick(() => {
-      updateHistoryChart()
-      updatePerformanceChart()
+      updateHistoryChart(trendData)
+      updatePerformanceChart(performanceData)
     })
 
   } catch (error) {
-    ElMessage.error('查询失败，请重试')
+    console.error('查询个人奖金信息失败:', error)
+    const errorMessage = error.response?.data?.message || error.message || '查询失败，请重试'
+    ElMessage.error(errorMessage)
+    bonusInfo.value = null
   } finally {
     searching.value = false
   }
@@ -418,6 +556,11 @@ const resetSearch = () => {
 }
 
 const showExportDialog = () => {
+  if (!canExportReport.value) {
+    ElMessage.error('您没有权限导出奖金报告')
+    return
+  }
+  
   if (!bonusInfo.value) {
     ElMessage.warning('请先查询奖金信息')
     return
@@ -439,10 +582,14 @@ const handleExport = async () => {
 }
 
 // 图表更新函数
-const updateHistoryChart = () => {
+const updateHistoryChart = (trendData: any) => {
   if (!historyChart.value) return
 
   const chart = echarts.init(historyChart.value)
+  
+  // 使用真实数据或默认数据
+  const periods = trendData?.chartData?.periods || ['2024-08', '2024-09', '2024-10', '2024-11', '2024-12', '2025-01']
+  const amounts = trendData?.chartData?.totalAmounts || [22000, 24500, 26800, 25200, 27100, 28500]
   
   chart.setOption({
     title: {
@@ -459,7 +606,7 @@ const updateHistoryChart = () => {
     },
     xAxis: {
       type: 'category',
-      data: ['2024-08', '2024-09', '2024-10', '2024-11', '2024-12', '2025-01']
+      data: periods
     },
     yAxis: {
       type: 'value',
@@ -468,7 +615,7 @@ const updateHistoryChart = () => {
       }
     },
     series: [{
-      data: [22000, 24500, 26800, 25200, 27100, 28500],
+      data: amounts,
       type: 'line',
       smooth: true,
       symbol: 'circle',
@@ -489,10 +636,21 @@ const updateHistoryChart = () => {
   })
 }
 
-const updatePerformanceChart = () => {
+const updatePerformanceChart = (performanceData: any) => {
   if (!performanceChart.value) return
 
   const chart = echarts.init(performanceChart.value)
+  
+  // 使用真实数据或默认数据
+  const metrics = performanceData?.performanceMetrics
+  const personalScores = [
+    metrics?.efficiency * 100 || 88.5,
+    metrics?.innovation * 100 || 82.0,
+    metrics?.overallScore || 87.2,
+    metrics?.teamwork * 100 || 85.5,
+    78.8, // 创新能力 - 如果API没有提供则使用默认值
+    83.2  // 学习成长 - 如果API没有提供则使用默认值
+  ]
   
   chart.setOption({
     title: {
@@ -516,13 +674,13 @@ const updatePerformanceChart = () => {
       type: 'radar',
       data: [
         {
-          value: [88.5, 82.0, 87.2, 85.5, 78.8, 83.2],
+          value: personalScores,
           name: '个人得分',
           itemStyle: { color: '#409EFF' },
           areaStyle: { color: 'rgba(64, 158, 255, 0.3)' }
         },
         {
-          value: [75.0, 80.0, 78.5, 82.0, 85.0, 80.5],
+          value: [75.0, 80.0, 78.5, 82.0, 85.0, 80.5], // 部门平均分 - 可以从API获取
           name: '部门平均',
           itemStyle: { color: '#67C23A' },
           areaStyle: { color: 'rgba(103, 194, 58, 0.2)' }
@@ -559,6 +717,18 @@ const updatePerformanceChart = () => {
 .header-actions {
   display: flex;
   gap: 12px;
+}
+
+.permission-tip-card {
+  margin-bottom: 20px;
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.permission-tip-card .el-alert {
+  border: none;
+  background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
 }
 
 .search-card,

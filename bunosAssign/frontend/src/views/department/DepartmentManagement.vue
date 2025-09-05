@@ -283,10 +283,20 @@ const loadDepartmentTree = async () => {
 // 获取业务线列表
 const getBusinessLineList = async () => {
   try {
-    const { data } = await getBusinessLines({ status: 1 })
-    businessLines.value = data.businessLines
+    console.log('🔍 开始获取业务线列表...')
+    const response = await getBusinessLines({ status: 1 })
+    console.log('📡 业务线API响应:', response)
+    
+    if (response && response.data && response.data.businessLines) {
+      businessLines.value = response.data.businessLines
+      console.log('✅ 业务线数据设置成功:', businessLines.value)
+    } else {
+      console.warn('⚠️ API响应格式异常:', response)
+      businessLines.value = []
+    }
   } catch (error) {
-    console.error('获取业务线列表失败:', error)
+    console.error('❌ 获取业务线列表失败:', error)
+    businessLines.value = []
   }
 }
 

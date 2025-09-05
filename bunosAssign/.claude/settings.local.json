@@ -40,12 +40,38 @@
       "Bash(dir \"C:\\Users\\duron\\.claude\\agents\")",
       "Bash(mv:*)",
       "Bash(npm test:*)",
-      "Bash(npm run type-check:*)"
+      "Bash(npm run type-check:*)",
+      "Bash(npx vue-tsc:*)",
+      "Bash(/dev/null)",
+      "Bash(npm run lint)",
+      "Bash(dir:*)",
+      "WebFetch(domain:localhost)",
+      "Bash(PORT=3002 node src/app.js)",
+      "Bash(PORT=3002 node src/app.js)",
+      "Bash(./scripts/quick-test.bat)",
+      "Bash(npm start)",
+      "Bash(PORT=3002 npm start)",
+      "Bash(__NEW_LINE__ echo \"Testing GET /api/bonus/personal-overview:\")",
+      "Bash(__NEW_LINE__ echo \"Testing GET /api/personal-bonus/overview (existing route):\")",
+      "Bash(__NEW_LINE__ echo \"Testing available projects API first:\")",
+      "Bash(__NEW_LINE__ echo \"=== TESTING NEW BONUS APIS ===\")",
+      "Bash(__NEW_LINE__ echo \"2. Testing GET /api/bonus/personal-details:\")",
+      "Bash(__NEW_LINE__ echo \"3. Testing GET /api/bonus/personal-trend:\")",
+      "Bash(__NEW_LINE__ echo)",
+      "Bash(__NEW_LINE__ echo \"=== TESTING PROJECT APIS ===\")",
+      "Bash(__NEW_LINE__ echo \"3. Testing POST /api/projects/apply:\")",
+      "Bash(__NEW_LINE__ echo \"Testing GET /api/bonus/team-overview:\")",
+      "Bash(./scripts/quick-deploy-test.sh:*)",
+      "Bash(./scripts/production-readiness-check.sh:*)",
+      "Bash(PORT=3001 npm run dev)",
+      "Bash(claude-code-spec-workflow get-steering-context:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits",
     "additionalDirectories": [
-      "E:\\mnt\\e\\dev\\bunosAssign"
+      "E:\\mnt\\e\\dev\\bunosAssign",
+      "E:\\",
+      "E:\\mnt\\e\\dev\\bunosassign"
     ]
   }
 }

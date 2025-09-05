@@ -77,6 +77,7 @@ function loadRoutes() {
     bonusAllocationRoutes: require('./routes/bonusAllocationRoutes'),
     dataImportExportRoutes: require('./routes/dataImportExportRoutes'),
     personalBonusRoutes: require('./routes/personalBonus'),
+    bonusRoutes: require('./routes/bonus'),
     projectCollaborationRoutes: require('./routes/projectCollaboration'),
     permissionDelegationRoutes: require('./routes/permissionDelegation'),
     projectCostRoutes: require('./routes/projectCosts'),
@@ -84,6 +85,7 @@ function loadRoutes() {
     projectMembersRoutes: require('./routes/projectMembers'),
     projectBonusRoutes: require('./routes/projectBonus'),
     reportsRoutes: require('./routes/reports'),
+    dashboardRoutes: require('./routes/dashboard'),
     healthRoutes: require('./routes/health')
   }
 }
@@ -94,7 +96,8 @@ const PORT = process.env.PORT || 3000
 // 中间件配置
 app.use(helmet())
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:8080',
+  //origin: process.env.FRONTEND_URL || 'http://localhost:8080',
+  origin: '*',
   credentials: true
 }))
 
@@ -111,6 +114,7 @@ app.use(express.urlencoded({ extended: true }))
 
 // 请求日志
 app.use((req, res, next) => {
+  console.log(`🌐 收到请求: ${req.method} ${req.path} - ${req.ip}`)
   logger.info(`${req.method} ${req.path} - ${req.ip}`)
   next()
 })
@@ -137,11 +141,13 @@ function setupRoutes(routes) {
   app.use('/api/bonus-allocation', routes.bonusAllocationRoutes)
   app.use('/api/data', routes.dataImportExportRoutes)
   app.use('/api/personal-bonus', routes.personalBonusRoutes)
+  app.use('/api/bonus', routes.bonusRoutes)
   app.use('/api/project-collaboration', routes.projectCollaborationRoutes)
   app.use('/api/permission-delegation', routes.permissionDelegationRoutes)
   app.use('/api/project-costs', routes.projectCostRoutes)
   app.use('/api/position-requirements', routes.positionRequirementRoutes)
   app.use('/api/reports', routes.reportsRoutes)
+  app.use('/api/dashboard', routes.dashboardRoutes)
   app.use('/api', routes.healthRoutes)
   console.log('✅ API路由配置完成')
 }
@@ -223,7 +229,7 @@ async function startServer() {
     setupRoutes(routes)
     
     // 启动 HTTP 服务器
-    const server = app.listen(PORT, () => {
+    const server = app.listen(PORT, '0.0.0.0', () => {
       logger.info(`🚀 服务器启动成功，端口: ${PORT}`)
       logger.info(`🌐 服务器地址: http://localhost:${PORT}`)
       

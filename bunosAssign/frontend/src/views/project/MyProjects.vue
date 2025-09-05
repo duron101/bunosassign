@@ -180,9 +180,9 @@
           >
             <el-option
               v-for="project in availableProjects"
-              :key="project._id"
+              :key="project.id || project._id"
               :label="`${project.name} (${project.code})`"
-              :value="project._id"
+              :value="project.id || project._id"
             >
               <div class="project-option">
                 <div class="project-name">{{ project.name }}</div>
@@ -401,13 +401,24 @@ const loadMyProjects = async () => {
   try {
     loading.value = true
     const response = await projectMemberApi.getMyProjects()
+    console.log('📡 API响应:', response)
     
-    // 确保数据是数组并且每个元素都是有效的对象
-    if (response && response.data && Array.isArray(response.data)) {
+    // 根据后端修复后的数据结构解析
+    if (response && response.data && response.data.data && Array.isArray(response.data.data.projects)) {
+      // 新格式：response.data.data.projects
+      projectList.value = response.data.data.projects.filter(item => item && typeof item === 'object')
+      console.log('✅ 使用新数据格式，项目数:', projectList.value.length)
+    } else if (response && response.data && Array.isArray(response.data)) {
+      // 兼容格式：直接返回数组
       projectList.value = response.data.filter(item => item && typeof item === 'object')
+      console.log('✅ 使用兼容数据格式，项目数:', projectList.value.length)
     } else {
+      console.warn('⚠️ API返回数据格式异常:', response)
       projectList.value = []
     }
+    
+    console.log('📋 最终项目列表:', projectList.value)
+    console.log('📋 第一个项目详情:', projectList.value[0])
     
     // 计算统计数据
     stats.totalProjects = projectList.value.length
@@ -417,8 +428,10 @@ const loadMyProjects = async () => {
       .filter(p => p && p.projectBonus && !isNaN(Number(p.projectBonus)))
       .reduce((sum, p) => sum + Number(p.projectBonus), 0)
       
+    console.log('📊 统计数据:', stats.value)
+      
   } catch (error) {
-    console.error('加载项目列表失败:', error)
+    console.error('❌ 加载项目列表失败:', error)
     ElMessage.error('加载项目列表失败: ' + (error.message || '未知错误'))
     projectList.value = []
     
@@ -435,10 +448,34 @@ const loadMyProjects = async () => {
 // 加载可申请的项目
 const loadAvailableProjects = async () => {
   try {
+    console.log('正在加载可申请的项目...')
     const response = await projectApi.getAvailableProjects()
-    availableProjects.value = response.data
+    console.log('API响应:', response)
+    
+    // 检查后端返回的数据结构
+    if (response && response.data && response.data.data && Array.isArray(response.data.data.projects)) {
+      availableProjects.value = response.data.data.projects
+      console.log('成功加载可申请项目:', response.data.data.projects.length, '个')
+    } else if (response && response.data && Array.isArray(response.data.projects)) {
+      // 兼容直接返回projects数组的情况
+      availableProjects.value = response.data.projects
+      console.log('成功加载可申请项目:', response.data.projects.length, '个')
+    } else if (response && response.data && Array.isArray(response.data)) {
+      // 兼容直接返回数组的情况
+      availableProjects.value = response.data
+      console.log('成功加载可申请项目:', response.data.length, '个')
+    } else {
+      console.warn('API返回数据格式异常:', response)
+      availableProjects.value = []
+      ElMessage.warning('未找到可申请的项目')
+    }
+    
+    // 调试信息
+    console.log('最终设置的可申请项目:', availableProjects.value)
   } catch (error) {
-    ElMessage.error('加载可申请项目失败: ' + error.message)
+    console.error('加载可申请项目失败:', error)
+    availableProjects.value = []
+    ElMessage.error('加载可申请项目失败: ' + (error.message || '网络错误'))
   }
 }
 

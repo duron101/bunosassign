@@ -11,7 +11,7 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3002,
+    port: 8080,
     host: '0.0.0.0',
     proxy: {
       '/api': {
@@ -33,7 +33,7 @@ export default defineConfig({
       },
     },
     hmr: {
-      port: 3002,
+      port: 8080,
       overlay: false,
     },
   },

@@ -187,3 +187,145 @@ export interface ProjectStatistics {
   totalBudget: number
   totalProfitTarget: number
 }
+
+// 项目协作相关接口扩展
+
+// 项目申请状态枚举
+export enum ProjectApplicationStatus {
+  PENDING = 'pending',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+  WITHDRAWN = 'withdrawn'
+}
+
+// 项目申请状态标签映射
+export const PROJECT_APPLICATION_STATUS_LABELS: Record<ProjectApplicationStatus, string> = {
+  [ProjectApplicationStatus.PENDING]: '待审批',
+  [ProjectApplicationStatus.APPROVED]: '已批准',
+  [ProjectApplicationStatus.REJECTED]: '已拒绝',
+  [ProjectApplicationStatus.WITHDRAWN]: '已撤回'
+}
+
+// 项目申请状态颜色映射
+export const PROJECT_APPLICATION_STATUS_COLORS: Record<ProjectApplicationStatus, string> = {
+  [ProjectApplicationStatus.PENDING]: 'warning',
+  [ProjectApplicationStatus.APPROVED]: 'success',
+  [ProjectApplicationStatus.REJECTED]: 'danger',
+  [ProjectApplicationStatus.WITHDRAWN]: 'info'
+}
+
+// 技能要求接口
+export interface SkillRequirement {
+  id?: string
+  skill: string
+  level: 'beginner' | 'intermediate' | 'advanced' | 'expert'
+  required: boolean
+  description?: string
+}
+
+// 团队成员角色接口
+export interface TeamMemberRole {
+  id: string
+  employeeId: string
+  employeeName: string
+  employeeNo: string
+  roleName: string
+  contributionWeight?: number
+  estimatedWorkload?: number
+  allocationPercentage?: number
+  reason?: string
+}
+
+// 项目需求接口
+export interface ProjectRequirement {
+  id?: string
+  type: 'technical' | 'business' | 'quality'
+  title: string
+  description: string
+  priority: ProjectPriority
+  isMandatory: boolean
+  acceptanceCriteria?: string[]
+}
+
+// 扩展的项目接口，包含协作字段
+export interface ProjectWithCollaboration extends Project {
+  workContent?: string
+  bonusScale?: number
+  skillRequirements?: SkillRequirement[]
+  requirements?: ProjectRequirement[]
+  teamSize?: {
+    min: number
+    max: number
+  }
+  applicationCount?: number
+  approvedApplicationCount?: number
+  isPublished?: boolean
+  publishedAt?: string
+}
+
+// 项目发布数据接口
+export interface ProjectPublishData extends ProjectCreateData {
+  workContent?: string
+  bonusScale?: number
+  skillRequirements?: SkillRequirement[]
+  requirements?: ProjectRequirement[]
+  teamSize?: {
+    min: number
+    max: number
+  }
+}
+
+// 团队申请接口
+export interface TeamApplication {
+  id: string
+  projectId: string
+  projectName?: string
+  projectCode?: string
+  applicantId: string
+  applicantName?: string
+  teamName: string
+  teamDescription: string
+  applicationReason: string
+  estimatedCost?: number
+  members: TeamMemberRole[]
+  status: ProjectApplicationStatus
+  submittedAt: string
+  reviewedAt?: string
+  reviewedBy?: string
+  reviewComments?: string
+  withdrawnAt?: string
+  withdrawReason?: string
+}
+
+// 项目扩展表单接口
+export interface ProjectCollaborationForm extends ProjectForm {
+  workContent?: string
+  bonusScale?: number
+  skillRequirements?: SkillRequirement[]
+  requirements?: ProjectRequirement[]
+  teamSize?: {
+    min: number
+    max: number
+  }
+  isPublished?: boolean
+}
+
+// 申请历史查询参数
+export interface ApplicationListParams {
+  page?: number
+  pageSize?: number
+  projectName?: string
+  status?: ProjectApplicationStatus
+  applicantName?: string
+}
+
+// 申请历史响应接口
+export interface ApplicationListResponse {
+  applications: TeamApplication[]
+  pagination: {
+    total: number
+    page: number
+    pageSize: number
+    totalPages: number
+  }
+}

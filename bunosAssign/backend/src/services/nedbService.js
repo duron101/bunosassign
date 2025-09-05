@@ -1586,6 +1586,87 @@ class NeDBService {
       throw error
     }
   }
+
+  /**
+   * 获取员工的项目成员记录
+   * @param {string} employeeId - 员工ID
+   * @returns {Promise<Array>} 项目成员记录列表
+   */
+  async getEmployeeProjectMembers(employeeId) {
+    try {
+      this.ensureCollection('projectMembers')
+      return await this.find('projectMembers', { employeeId })
+    } catch (error) {
+      console.error('❌ 获取员工项目成员记录失败:', error)
+      return [] // 返回空数组以避免错误
+    }
+  }
+
+  /**
+   * 创建项目成员记录
+   * @param {Object} memberData - 项目成员数据
+   * @returns {Promise<Object>} 创建的项目成员记录
+   */
+  async createProjectMember(memberData) {
+    try {
+      this.ensureCollection('projectMembers')
+      const member = {
+        ...memberData,
+        _id: require('crypto').randomUUID(),
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+      return await this.insert('projectMembers', member)
+    } catch (error) {
+      console.error('❌ 创建项目成员记录失败:', error)
+      throw error
+    }
+  }
+
+  /**
+   * 获取奖金分配记录
+   * @param {Object} query - 查询条件
+   * @returns {Promise<Array>} 奖金分配记录列表
+   */
+  async getBonusAllocations(query = {}) {
+    try {
+      this.ensureCollection('bonusAllocations')
+      return await this.find('bonusAllocations', query)
+    } catch (error) {
+      console.error('❌ 获取奖金分配记录失败:', error)
+      return [] // 返回空数组以避免错误
+    }
+  }
+
+  /**
+   * 获取员工通过用户ID
+   * @param {string} userId - 用户ID
+   * @returns {Promise<Object|null>} 员工记录
+   */
+  async getEmployeeByUserId(userId) {
+    try {
+      this.ensureCollection('employees')
+      return await this.findOne('employees', { userId })
+    } catch (error) {
+      console.error('❌ 通过用户ID获取员工记录失败:', error)
+      return null
+    }
+  }
+
+  /**
+   * 获取部门下的员工列表
+   * @param {string} departmentId - 部门ID
+   * @returns {Promise<Array>} 员工列表
+   */
+  async getEmployeesByDepartment(departmentId) {
+    try {
+      this.ensureCollection('employees')
+      return await this.find('employees', { departmentId })
+    } catch (error) {
+      console.error('❌ 获取部门员工列表失败:', error)
+      return [] // 返回空数组以避免错误
+    }
+  }
 }
 
 // 创建单例实例

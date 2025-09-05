@@ -7,9 +7,17 @@
           <el-icon><Plus /></el-icon>
           新增项目
         </el-button>
-        <el-button type="success" @click="goToProjectPublish">
-          <el-icon><Plus /></el-icon>
+        <el-button v-if="canPublishProject" type="success" @click="showPublishDialog">
+          <el-icon><DocumentAdd /></el-icon>
           发布项目
+        </el-button>
+        <el-button v-if="canViewProject" type="info" @click="showMyApplications">
+          <el-icon><List /></el-icon>
+          我的申请
+        </el-button>
+        <el-button v-if="canApproveTeam" type="warning" @click="showApplicationManager">
+          <el-icon><Document /></el-icon>
+          申请管理
         </el-button>
         <el-button @click="handleExport">
           <el-icon><Download /></el-icon>
@@ -48,6 +56,12 @@
               :label="label"
               :value="value"
             />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="发布状态">
+          <el-select v-model="queryForm.isPublished" placeholder="全部项目" clearable style="width: 120px">
+            <el-option label="已发布" :value="true" />
+            <el-option label="未发布" :value="false" />
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -231,7 +245,29 @@
             <span v-else class="text-muted">-</span>
           </template>
         </el-table-column>
-        <el-table-column label="财务概览" width="200" align="center">
+        <el-table-column label="协作信息" width="150" align="center">
+          <template #default="{ row }">
+            <div class="collaboration-info">
+              <div class="collab-row">
+                <el-tag v-if="(row as ProjectWithCollaboration).isPublished" type="success" size="small">
+                  已发布
+                </el-tag>
+                <el-tag v-else type="info" size="small">
+                  未发布
+                </el-tag>
+              </div>
+              <div class="collab-row" v-if="(row as ProjectWithCollaboration).applicationCount">
+                <span class="collab-label">申请数:</span>
+                <span class="collab-value">{{ (row as ProjectWithCollaboration).applicationCount }}</span>
+              </div>
+              <div class="collab-row" v-if="(row as ProjectWithCollaboration).approvedApplicationCount">
+                <span class="collab-label">已批准:</span>
+                <span class="collab-value approved">{{ (row as ProjectWithCollaboration).approvedApplicationCount }}</span>
+              </div>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="财务概览" width="180" align="center">
           <template #default="{ row }">
             <div class="finance-overview">
               <div class="finance-row">
@@ -249,21 +285,27 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="200" fixed="right">
+        <el-table-column label="操作" width="260" fixed="right">
           <template #default="{ row }">
             <el-button link type="primary" @click="showDetailDialog(row)">详情</el-button>
             <el-button link type="primary" @click="showEditDialog(row)">编辑</el-button>
             <el-button link type="warning" @click="showWeightDialog(row)">权重配置</el-button>
-            <el-dropdown @command="handleCommand">
+            <el-dropdown @command="(command) => handleCommand(command, row)">
               <el-button link type="primary">
                 更多<el-icon class="el-icon--right"><arrow-down /></el-icon>
               </el-button>
               <template #dropdown>
                 <el-dropdown-menu>
-                  <el-dropdown-item :command="`status_${row.id}`">
+                  <el-dropdown-item v-if="canPublishProject && !(row as ProjectWithCollaboration).isPublished" command="publish">
+                    发布项目
+                  </el-dropdown-item>
+                  <el-dropdown-item command="collaboration" v-if="(row as ProjectWithCollaboration).isPublished">
+                    协作详情
+                  </el-dropdown-item>
+                  <el-dropdown-item command="status">
                     修改状态
                   </el-dropdown-item>
-                  <el-dropdown-item :command="`delete_${row.id}`" class="danger-item">
+                  <el-dropdown-item command="delete" class="danger-item">
                     删除
                   </el-dropdown-item>
                 </el-dropdown-menu>
@@ -316,6 +358,22 @@
       @success="handleFormSuccess"
     />
 
+    <!-- 项目发布表单对话框 -->
+    <ProjectPublishFormDialog
+      v-model="publishFormVisible"
+      @success="handlePublishSuccess"
+    />
+
+    <!-- 申请管理对话框 -->
+    <el-dialog
+      v-model="applicationManagerVisible"
+      title="项目申请管理"
+      width="95%"
+      :before-close="() => applicationManagerVisible = false"
+    >
+      <ProjectApplicationManager />
+    </el-dialog>
+
     <!-- 权重配置对话框 -->
     <ProjectWeightDialog
       v-model="weightConfigVisible"
@@ -350,18 +408,22 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { 
-  Plus, Download, Search, Refresh, ArrowDown, Money, Wallet, TrendCharts, Present
+  Plus, Download, Search, Refresh, ArrowDown, Money, Wallet, TrendCharts, Present, Document
 } from '@element-plus/icons-vue'
 import { projectApi } from '@/api/project'
 import ProjectDetailDialog from './components/ProjectDetailDialog.vue'
 import ProjectFormDialog from './components/ProjectFormDialog.vue'
 import ProjectWeightDialog from './components/ProjectWeightDialog.vue'
+import ProjectPublishFormDialog from './components/ProjectPublishFormDialog.vue'
+import ProjectApplicationManager from './components/ProjectApplicationManager.vue'
+import { useProjectPermissions } from '@/composables/useProjectPermissions'
 import type { 
   Project, 
   ProjectListParams, 
   ProjectStatistics,
   ProjectStatus,
-  ProjectPriority 
+  ProjectPriority,
+  ProjectWithCollaboration 
 } from '@/types/project'
 import { 
   PROJECT_STATUS_LABELS, 
@@ -374,6 +436,9 @@ import {
 // 路由
 const router = useRouter()
 
+// 权限控制
+const { canPublishProject, canApproveTeam } = useProjectPermissions()
+
 // 响应式数据
 const loading = ref(false)
 const projects = ref<Project[]>([])
@@ -385,16 +450,19 @@ const detailVisible = ref(false)
 const formVisible = ref(false)
 const weightConfigVisible = ref(false)
 const statusDialogVisible = ref(false)
+const publishFormVisible = ref(false)
+const applicationManagerVisible = ref(false)
 const isEdit = ref(false)
 const newStatus = ref<ProjectStatus>()
 
 // 查询表单
-const queryForm = reactive<ProjectListParams & { page: number; pageSize: number }>({
+const queryForm = reactive<ProjectListParams & { page: number; pageSize: number; isPublished?: boolean }>({
   page: 1,
   pageSize: 20,
   search: '',
   status: undefined,
-  priority: undefined
+  priority: undefined,
+  isPublished: undefined
 })
 
 // 分页信息
@@ -469,7 +537,8 @@ const handleReset = () => {
     pageSize: 20,
     search: '',
     status: undefined,
-    priority: undefined
+    priority: undefined,
+    isPublished: undefined
   })
   loadProjects()
 }
@@ -521,28 +590,30 @@ const handleSelectionChange = (selection: Project[]) => {
 }
 
 // 命令处理
-const handleCommand = (command: string) => {
-  const [action, id] = command.split('_')
-  const projectId = parseInt(id)
+const handleCommand = (command: string, project: Project) => {
+  const projectId = typeof project.id === 'string' ? project.id : project.id.toString()
   
-  switch (action) {
+  switch (command) {
     case 'status':
-      handleStatusCommand(projectId)
+      handleStatusCommand(project)
       break
     case 'delete':
-      handleDeleteCommand(projectId)
+      handleDeleteCommand(project.id)
+      break
+    case 'publish':
+      handlePublishProject(project)
+      break
+    case 'collaboration':
+      handleViewCollaboration(project)
       break
   }
 }
 
 // 状态修改命令
-const handleStatusCommand = (projectId: number) => {
-  const project = projects.value.find(p => p.id === projectId)
-  if (project) {
-    currentProject.value = project
-    newStatus.value = project.status
-    statusDialogVisible.value = true
-  }
+const handleStatusCommand = (project: Project) => {
+  currentProject.value = project
+  newStatus.value = project.status
+  statusDialogVisible.value = true
 }
 
 // 状态修改确认
@@ -562,9 +633,12 @@ const handleStatusChange = async () => {
 }
 
 // 删除命令
-const handleDeleteCommand = async (projectId: number) => {
-  const project = projects.value.find(p => p.id === projectId)
-  if (!project) return
+const handleDeleteCommand = async (projectId: string | number) => {
+  const project = projects.value.find(p => p.id.toString() === projectId.toString())
+  if (!project) {
+    ElMessage.error('未找到要删除的项目')
+    return
+  }
   
   try {
     await ElMessageBox.confirm(
@@ -573,7 +647,8 @@ const handleDeleteCommand = async (projectId: number) => {
       {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
-        type: 'warning'
+        type: 'warning',
+        dangerouslyUseHTMLString: false
       }
     )
     
@@ -581,8 +656,37 @@ const handleDeleteCommand = async (projectId: number) => {
     ElMessage.success('项目删除成功')
     loadProjects()
   } catch (error: any) {
-    if (error !== 'cancel') {
-      ElMessage.error(error.response?.data?.message || '删除失败')
+    // 用户取消操作
+    if (error === 'cancel') {
+      return
+    }
+    
+    console.error('删除项目失败:', error)
+    
+    // 获取具体错误信息
+    let errorMessage = '删除失败'
+    if (error?.response?.data) {
+      const errorData = error.response.data
+      if (typeof errorData === 'string') {
+        errorMessage = errorData
+      } else if (errorData.message) {
+        errorMessage = errorData.message
+      } else if (errorData.error) {
+        errorMessage = errorData.error
+      }
+    } else if (error?.message) {
+      errorMessage = error.message
+    }
+    
+    // 根据错误类型提供友好提示
+    if (errorMessage.includes('依赖') || errorMessage.includes('关联')) {
+      ElMessage.error('无法删除项目：该项目存在关联数据，请先清理相关记录')
+    } else if (errorMessage.includes('权限') || errorMessage.includes('unauthorized')) {
+      ElMessage.error('无法删除项目：您没有删除该项目的权限')
+    } else if (errorMessage.includes('网络') || error?.code === 'NETWORK_ERROR') {
+      ElMessage.error('网络连接失败，请检查网络后重试')
+    } else {
+      ElMessage.error(`删除失败：${errorMessage}`)
     }
   }
 }
@@ -651,9 +755,32 @@ const getProfitClass = (profit: number) => {
   }
 }
 
-// 跳转到项目发布页面
-const goToProjectPublish = () => {
-  router.push('/project/publish')
+// 显示项目发布对话框
+const showPublishDialog = () => {
+  publishFormVisible.value = true
+}
+
+// 显示申请管理
+const showApplicationManager = () => {
+  applicationManagerVisible.value = true
+}
+
+// 处理发布项目
+const handlePublishProject = (project: Project) => {
+  // 这里可以预填充项目信息到发布表单
+  currentProject.value = project
+  publishFormVisible.value = true
+}
+
+// 查看协作详情
+const handleViewCollaboration = (project: Project) => {
+  // 跳转到项目协作详情页面
+  router.push(`/project/${project.id}/collaboration`)
+}
+
+// 发布成功回调
+const handlePublishSuccess = () => {
+  loadProjects()
 }
 
 // 组件挂载
@@ -847,5 +974,36 @@ onMounted(() => {
 
 .profit-negative {
   color: #f56c6c; /* 红色 */
+}
+
+/* 协作信息样式 */
+.collaboration-info {
+  text-align: center;
+}
+
+.collab-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+  font-size: 12px;
+}
+
+.collab-row:last-child {
+  margin-bottom: 0;
+}
+
+.collab-label {
+  color: #606266;
+  font-weight: 500;
+}
+
+.collab-value {
+  font-weight: bold;
+  color: #409eff;
+}
+
+.collab-value.approved {
+  color: #67c23a;
 }
 </style>

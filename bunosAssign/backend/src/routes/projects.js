@@ -107,6 +107,47 @@ router.get('/',
 
 /**
  * @swagger
+ * /api/projects/available:
+ *   get:
+ *     tags:
+ *       - 项目管理
+ *     summary: 获取用户可申请的项目列表
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 获取成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "获取成功"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     projects:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                     total:
+ *                       type: integer
+ *       400:
+ *         description: 用户未关联员工信息
+ */
+router.get('/available', 
+  authorize(['project:view']),
+  logOperation('查看', '可申请项目列表'),
+  projectController.getAvailableProjects
+)
+
+/**
+ * @swagger
  * /api/projects/{id}:
  *   get:
  *     tags:
@@ -275,7 +316,7 @@ router.delete('/:id',
  *         description: 项目不存在
  */
 router.get('/:id/weights', 
-  authorize(['project:view', 'business-line:view']),
+  authorize(['project:view', 'business_line:view']),
   logOperation('查看', '项目权重配置'),
   projectController.getProjectWeights
 )
@@ -325,7 +366,7 @@ router.get('/:id/weights',
  *         description: 更新成功
  */
 router.put('/:id/weights', 
-  authorize(['project:update', 'business-line:update']),
+  authorize(['project:update', 'business_line:update']),
   validate(projectSchemas.weights),
   logOperation('更新', '项目权重配置'),
   projectController.updateProjectWeights
@@ -352,7 +393,7 @@ router.put('/:id/weights',
  *         description: 重置成功
  */
 router.post('/:id/weights/reset', 
-  authorize(['project:update', 'business-line:update']),
+  authorize(['project:update', 'business_line:update']),
   logOperation('重置', '项目权重配置'),
   projectController.resetProjectWeights
 )
@@ -371,9 +412,124 @@ router.post('/:id/weights/reset',
  *         description: 获取成功
  */
 router.get('/statistics/weights', 
-  authorize(['project:view', 'business-line:view']),
+  authorize(['project:view', 'business_line:view']),
   logOperation('查看', '权重统计'),
   projectController.getWeightStatistics
+)
+
+/**
+ * @swagger
+ * /api/projects/my-projects:
+ *   get:
+ *     tags:
+ *       - 项目管理
+ *     summary: 获取我参与的项目列表
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [active, pending, completed, cancelled]
+ *         description: 项目状态筛选
+ *     responses:
+ *       200:
+ *         description: 获取成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "获取成功"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     projects:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                     total:
+ *                       type: integer
+ *       400:
+ *         description: 用户未关联员工信息
+ */
+router.get('/my-projects', 
+  authorize(['project:view']),
+  logOperation('查看', '我的项目列表'),
+  projectController.getMyProjects
+)
+
+/**
+ * @swagger
+ * /api/projects/apply:
+ *   post:
+ *     tags:
+ *       - 项目管理
+ *     summary: 申请加入项目
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - projectId
+ *               - role
+ *               - reason
+ *             properties:
+ *               projectId:
+ *                 type: string
+ *                 description: 项目ID
+ *               role:
+ *                 type: string
+ *                 description: 申请角色（如：开发工程师、测试工程师等）
+ *               reason:
+ *                 type: string
+ *                 description: 申请理由
+ *               expectedContribution:
+ *                 type: string
+ *                 description: 预期贡献（可选）
+ *     responses:
+ *       200:
+ *         description: 申请提交成功
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "项目申请提交成功"
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: 参数错误或用户未关联员工信息
+ *       404:
+ *         description: 项目不存在
+ *       409:
+ *         description: 已经申请过该项目
+ */
+router.post('/apply', 
+  authorize(['project:view']),
+  validate(Joi.object({
+    projectId: Joi.string().required(),
+    role: Joi.string().min(2).max(100).required(),
+    reason: Joi.string().min(10).max(1000).required(),
+    expectedContribution: Joi.string().max(1000).optional()
+  })),
+  logOperation('申请', '加入项目'),
+  projectController.applyToProject
 )
 
 module.exports = router

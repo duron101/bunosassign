@@ -220,24 +220,37 @@ const handleUserAction = async (command: string) => {
           cancelButtonText: '取消'
         })
         
+        console.log('Starting logout process...')
+        
         // 先调用后端登出API（如果有的话）
         try {
           const { logout } = await import('@/api/auth')
           await logout()
+          console.log('Backend logout successful')
         } catch (error) {
           console.warn('Backend logout failed:', error)
           // 即使后端登出失败，也继续前端登出
         }
         
-        // 前端登出
+        // 前端登出 - 清除所有状态
+        console.log('Clearing user state...')
         userStore.logout()
         
-        // 跳转到登录页
-        await router.push('/login')
+        // 确保localStorage也被清除
+        localStorage.removeItem('token')
+        localStorage.removeItem('refreshToken')
+        localStorage.removeItem('user')
+        localStorage.removeItem('permissions')
+        
+        console.log('User state cleared, redirecting to login...')
+        
+        // 使用replace而不是push，避免用户通过后退按钮回到已登出状态
+        await router.replace('/login')
         
         ElMessage.success('已退出登录')
-      } catch {
+      } catch (error) {
         // 用户取消或其他错误
+        console.log('Logout cancelled or failed:', error)
       }
       break
   }

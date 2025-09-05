@@ -703,16 +703,33 @@ const handleCreatePool = async () => {
     await poolFormRef.value.validate()
     submitting.value = true
     
-    // 调用API创建奖金池
-    console.log('创建奖金池:', poolForm)
+    // 调用真实API创建奖金池
+    const createData = {
+      period: poolForm.period,
+      totalProfit: poolForm.totalProfit,
+      poolRatio: poolForm.poolRatio,
+      reserveRatio: poolForm.reserveRatio,
+      specialRatio: poolForm.specialRatio
+    }
     
-    ElMessage.success('奖金池创建成功')
-    createPoolVisible.value = false
-    loadBonusPools()
+    console.log('创建奖金池:', createData)
+    
+    // 使用calculation API创建奖金池
+    const { createBonusPool } = await import('@/api/calculation')
+    const response = await createBonusPool(createData)
+    
+    if (response && response.code === 200) {
+      ElMessage.success('奖金池创建成功')
+      createPoolVisible.value = false
+      loadBonusPools()
+    } else {
+      throw new Error(response?.message || '创建奖金池失败')
+    }
     
   } catch (error) {
     console.error('创建奖金池失败:', error)
-    ElMessage.error('创建失败')
+    const errorMessage = error.response?.data?.message || error.message || '创建失败'
+    ElMessage.error(errorMessage)
   } finally {
     submitting.value = false
   }

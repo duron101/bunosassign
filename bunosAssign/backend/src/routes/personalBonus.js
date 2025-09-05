@@ -11,7 +11,222 @@ const {
 
 /**
  * @swagger
- * /api/personal-bonus:
+ * /api/personal-bonus/overview:
+ *   get:
+ *     summary: 获取个人奖金概览
+ *     tags: [个人奖金]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: period
+ *         schema:
+ *           type: string
+ *         description: 期间（格式：YYYY-MM）
+ *     responses:
+ *       200:
+ *         description: 获取成功
+ *       401:
+ *         description: 未授权
+ *       500:
+ *         description: 服务器错误
+ */
+router.get('/overview', authenticateToken, (req, res, next) => personalBonusController.getOverview(req, res, next))
+
+/**
+ * @swagger
+ * /api/personal-bonus/trend:
+ *   get:
+ *     summary: 获取奖金趋势分析
+ *     tags: [个人奖金]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: periods
+ *         schema:
+ *           type: integer
+ *           default: 12
+ *         description: 分析期间数
+ *     responses:
+ *       200:
+ *         description: 获取成功
+ *       401:
+ *         description: 未授权
+ *       500:
+ *         description: 服务器错误
+ */
+router.get('/trend', authenticateToken, (req, res, next) => personalBonusController.getBonusTrend(req, res, next))
+
+/**
+ * @swagger
+ * /api/personal-bonus/performance:
+ *   get:
+ *     summary: 获取绩效详情
+ *     tags: [个人奖金]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: period
+ *         schema:
+ *           type: string
+ *         description: 期间（格式：YYYY-MM）
+ *     responses:
+ *       200:
+ *         description: 获取成功
+ *       401:
+ *         description: 未授权
+ *       500:
+ *         description: 服务器错误
+ */
+router.get('/performance', authenticateToken, (req, res, next) => personalBonusController.getPerformanceDetail(req, res, next))
+
+/**
+ * @swagger
+ * /api/personal-bonus/projects:
+ *   get:
+ *     summary: 获取项目参与详情
+ *     tags: [个人奖金]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: period
+ *         schema:
+ *           type: string
+ *         description: 期间（格式：YYYY-MM）
+ *     responses:
+ *       200:
+ *         description: 获取成功
+ *       401:
+ *         description: 未授权
+ *       500:
+ *         description: 服务器错误
+ */
+router.get('/projects', authenticateToken, (req, res, next) => personalBonusController.getProjectParticipation(req, res, next))
+
+/**
+ * @swagger
+ * /api/personal-bonus/three-dimensional:
+ *   get:
+ *     summary: 获取三维分解详情
+ *     tags: [个人奖金]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: period
+ *         schema:
+ *           type: string
+ *         description: 期间（格式：YYYY-MM）
+ *     responses:
+ *       200:
+ *         description: 获取成功
+ *       401:
+ *         description: 未授权
+ *       500:
+ *         description: 服务器错误
+ */
+router.get('/three-dimensional', authenticateToken, (req, res, next) => personalBonusController.getThreeDimensionalDetail(req, res, next))
+
+/**
+ * @swagger
+ * /api/personal-bonus/simulation:
+ *   get:
+ *     summary: 获取奖金模拟分析
+ *     tags: [个人奖金]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: scenarios
+ *         schema:
+ *           type: string
+ *         description: 模拟场景参数（JSON字符串）
+ *     responses:
+ *       200:
+ *         description: 获取成功
+ *       401:
+ *         description: 未授权
+ *       500:
+ *         description: 服务器错误
+ */
+router.get('/simulation', authenticateToken, (req, res, next) => personalBonusController.getSimulation(req, res, next))
+
+/**
+ * @swagger
+ * /api/personal-bonus/simulation:
+ *   post:
+ *     summary: 提交奖金模拟分析
+ *     tags: [个人奖金]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               scenarios:
+ *                 type: object
+ *                 description: 模拟场景参数
+ *     responses:
+ *       200:
+ *         description: 获取成功
+ *       401:
+ *         description: 未授权
+ *       500:
+ *         description: 服务器错误
+ */
+router.post('/simulation', authenticateToken, (req, res, next) => personalBonusController.postSimulation(req, res, next))
+
+/**
+ * @swagger
+ * /api/personal-bonus/improvement-suggestions:
+ *   get:
+ *     summary: 获取个人改进建议
+ *     tags: [个人奖金]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 获取成功
+ *       401:
+ *         description: 未授权
+ *       500:
+ *         description: 服务器错误
+ */
+router.get('/improvement-suggestions', authenticateToken, (req, res, next) => personalBonusController.getImprovementSuggestions(req, res, next))
+
+/**
+ * @swagger
+ * /api/personal-bonus/peer-comparison:
+ *   get:
+ *     summary: 获取同级对比分析
+ *     tags: [个人奖金]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: period
+ *         schema:
+ *           type: string
+ *         description: 期间（格式：YYYY-MM）
+ *     responses:
+ *       200:
+ *         description: 获取成功
+ *       401:
+ *         description: 未授权
+ *       500:
+ *         description: 服务器错误
+ */
+router.get('/peer-comparison', authenticateToken, (req, res, next) => personalBonusController.getPeerComparison(req, res, next))
+
+/**
+ * @swagger
+ * /api/personal-bonus/{employeeId}:
  *   get:
  *     summary: 获取个人奖金信息
  *     tags: [个人奖金]
@@ -20,38 +235,15 @@ const {
  *     parameters:
  *       - in: path
  *         name: employeeId
+ *         required: false
  *         schema:
  *           type: string
  *         description: 员工ID（可选，不传则获取当前用户）
  *     responses:
  *       200:
  *         description: 获取成功
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 code:
- *                   type: integer
- *                   example: 200
- *                 message:
- *                   type: string
- *                   example: 获取成功
- *                 data:
- *                   type: object
- *                   properties:
- *                     employeeId:
- *                       type: string
- *                     employeeName:
- *                       type: string
- *                     totalBonus:
- *                       type: number
- *                     totalAllocations:
- *                       type: integer
- *                     bonusByProject:
- *                       type: array
- *                       items:
- *                         type: object
+ *       400:
+ *         description: 请求参数错误
  *       403:
  *         description: 权限不足
  *       500:
@@ -267,12 +459,6 @@ router.put('/adjustment/:adjustmentId/approve', authenticateToken, checkBonusApp
  *         description: 服务器错误
  */
 router.get('/adjustment/requests', authenticateToken, checkBonusViewPermission, personalBonusController.getBonusAdjustmentRequests)
-
-// 使用实际存在的控制器方法
-router.get('/history', authenticateToken, personalBonusController.getPersonalBonusHistory)
-router.get('/stats', authenticateToken, personalBonusController.getPersonalBonusStats)
-router.get('/overview', authenticateToken, personalBonusController.getOverview)
-router.get('/simulation', authenticateToken, personalBonusController.getSimulation)
 
 /**
  * 错误处理中间件

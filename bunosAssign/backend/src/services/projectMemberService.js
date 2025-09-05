@@ -201,6 +201,16 @@ class ProjectMemberService {
           
           return {
             ...member,
+            id: member._id,
+            projectId: member.projectId,
+            projectName: project ? project.name : '未知项目',           // 前端期望的字段名
+            projectCode: project ? project.code : '未知代码',           // 前端期望的字段名
+            projectStatus: project ? project.status : 'unknown',       // 前端期望的字段名
+            roleName: role ? role.name : (member.role || '成员'),      // 前端期望的字段名
+            joinDate: member.joinDate || member.createdAt,
+            status: member.status || 'active',                         // 参与状态
+            participationRatio: member.contributionWeight || 0,        // 前端期望的字段名
+            projectBonus: member.projectBonus || 0,                    // 项目奖金
             project: project ? {
               id: project._id,
               name: project.name,

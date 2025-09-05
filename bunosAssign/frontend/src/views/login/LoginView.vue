@@ -104,9 +104,18 @@ const handleLogin = async () => {
     await loginFormRef.value.validate()
     loading.value = true
     
+    console.log('🚀 Starting login process...')
+    
     // 调用真实登录API
     const { login } = await import('@/api/auth')
+    console.log('📡 Calling login API...')
     const response = await login(loginForm)
+    
+    console.log('✅ Login API response received:', {
+      hasData: !!response.data,
+      hasToken: !!(response.data?.token || response.token),
+      hasUser: !!(response.data?.user || response.user)
+    })
     
     // 处理不同的响应格式
     let loginData
@@ -118,8 +127,11 @@ const handleLogin = async () => {
     
     // 确保有必要的字段
     if (!loginData.token || !loginData.user) {
-      throw new Error('登录响应格式错误')
+      console.error('❌ Invalid login response format:', loginData)
+      throw new Error('登录响应格式错误：缺少必要字段')
     }
+    
+    console.log('✅ Login data validated, setting user store...')
     
     // 设置登录信息
     userStore.setLoginData({
@@ -129,13 +141,21 @@ const handleLogin = async () => {
       permissions: loginData.permissions || []
     })
     
+    console.log('✅ User store updated, login successful')
     ElMessage.success('登录成功')
     
     // 跳转到Dashboard
+    console.log('🔄 Navigating to dashboard...')
     await router.push('/dashboard')
     
   } catch (error: any) {
-    console.error('Login error:', error)
+    console.error('❌ Login error details:', {
+      error: error,
+      message: error.message,
+      response: error.response,
+      status: error.response?.status,
+      data: error.response?.data
+    })
     
     // 处理不同类型的错误
     if (error.response?.status === 401) {
@@ -146,8 +166,11 @@ const handleLogin = async () => {
       ElMessage.error('服务器错误，请稍后重试')
     } else if (error.message?.includes('网络')) {
       ElMessage.error('网络连接失败，请检查网络设置')
+    } else if (error.code === 'ECONNREFUSED' || error.message?.includes('Network Error')) {
+      ElMessage.error('无法连接到服务器，请确认后端服务正在运行')
     } else {
-      ElMessage.error(error.response?.data?.message || error.message || '登录失败，请重试')
+      const errorMsg = error.response?.data?.message || error.message || '登录失败，请重试'
+      ElMessage.error(errorMsg)
     }
   } finally {
     loading.value = false

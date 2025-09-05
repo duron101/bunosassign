@@ -75,38 +75,54 @@ export const useUserStore = defineStore('user', () => {
   }
 
   const hasAnyPermission = (requiredPermissions: string[]): boolean => {
-    console.log('hasAnyPermission check:', {
+    console.log('🔐 权限检查详情:', {
       requiredPermissions,
       userPermissions: permissions.value,
       hasWildcard: permissions.value.includes('*'),
-      result: permissions.value.includes('*') || requiredPermissions.some(permission => permissions.value.includes(permission))
+      userInfo: user.value,
+      token: token.value
     })
     
-    if (permissions.value.includes('*')) return true
-    return requiredPermissions.some(permission => permissions.value.includes(permission))
+    if (permissions.value.includes('*')) {
+      console.log('✅ 用户拥有通配符权限 *')
+      return true
+    }
+    
+    const hasRequiredPermission = requiredPermissions.some(permission => permissions.value.includes(permission))
+    console.log('🔍 权限检查结果:', {
+      hasRequiredPermission,
+      matchedPermissions: requiredPermissions.filter(permission => permissions.value.includes(permission))
+    })
+    
+    return hasRequiredPermission
   }
 
   const initFromStorage = () => {
     // 避免重复初始化
     if (isInitialized.value) {
-      console.log('User store already initialized, skipping...')
+      console.log('🔄 User store already initialized, skipping...')
       return
     }
 
+    console.log('🔄 Initializing user store from localStorage...')
+    
     const storedToken = localStorage.getItem('token')
     const storedRefreshToken = localStorage.getItem('refreshToken')
     const storedUser = localStorage.getItem('user')
     const storedPermissions = localStorage.getItem('permissions')
     
-    if (storedToken) {
+    // 检查token有效性
+    if (storedToken && validateStoredToken(storedToken)) {
       token.value = storedToken
       
       // 恢复用户信息
       if (storedUser) {
         try {
-          user.value = JSON.parse(storedUser)
+          const parsedUser = JSON.parse(storedUser)
+          user.value = parsedUser
+          console.log('✅ User data restored from storage')
         } catch (error) {
-          console.error('Failed to parse stored user:', error)
+          console.error('❌ Failed to parse stored user:', error)
           localStorage.removeItem('user')
         }
       }
@@ -114,68 +130,66 @@ export const useUserStore = defineStore('user', () => {
       // 恢复权限信息
       if (storedPermissions) {
         try {
-          permissions.value = JSON.parse(storedPermissions)
+          const parsedPermissions = JSON.parse(storedPermissions)
+          if (Array.isArray(parsedPermissions)) {
+            permissions.value = parsedPermissions
+            console.log('✅ Permissions restored from storage')
+          }
         } catch (error) {
-          console.error('Failed to parse stored permissions:', error)
+          console.error('❌ Failed to parse stored permissions:', error)
           localStorage.removeItem('permissions')
         }
       }
-      
-      // 如果是模拟token，自动设置模拟用户数据
-      if (storedToken === 'mock-token' || storedToken.startsWith('mock-')) {
-        if (!user.value) {
-          setUser({
-            id: 1,
-            username: 'admin',
-            realName: '系统管理员',
-            email: 'admin@company.com',
-            phone: '13800138000',
-            roleId: 1,
-            roleName: '超级管理员',
-            departmentId: 1,
-            departmentName: '技术部',
-            status: 1,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          })
-        }
-        if (permissions.value.length === 0) {
-          setPermissions(['*', 'employee:view', 'department:view', 'position:view', 'business-line:view', 'project:view', 'project_manager', 'admin', 'finance', 'hr', 'bonus:calculate', 'simulation:view', 'report:view', 'user:view', 'role:view', 'system:config'])
-        }
-      }
+    } else if (storedToken) {
+      // Token无效，清理所有相关数据
+      console.log('❌ Invalid token found, cleaning up storage')
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      localStorage.removeItem('permissions')
     }
     
-    if (storedRefreshToken) {
+    if (storedRefreshToken && validateStoredToken(storedRefreshToken)) {
       refreshToken.value = storedRefreshToken
+    } else if (storedRefreshToken) {
+      localStorage.removeItem('refreshToken')
     }
 
     isInitialized.value = true
-    console.log('User store initialized from storage:', {
+    console.log('🔄 User store initialization complete:', {
       hasToken: !!token.value,
       hasUser: !!user.value,
       hasPermissions: permissions.value.length > 0,
       isInitialized: isInitialized.value
     })
   }
+  
+  // 验证存储的token格式
+  const validateStoredToken = (tokenStr: string): boolean => {
+    if (!tokenStr) return false
+    
+    try {
+      const parts = tokenStr.split('.')
+      if (parts.length !== 3) return false
+      
+      const payload = JSON.parse(atob(parts[1]))
+      const now = Math.floor(Date.now() / 1000)
+      
+      // 检查是否过期（允许5分钟缓冲）
+      if (payload.exp && payload.exp < (now - 300)) {
+        console.log('❌ Token expired:', { exp: payload.exp, now })
+        return false
+      }
+      
+      return true
+    } catch (error) {
+      console.error('❌ Token validation failed:', error)
+      return false
+    }
+  }
 
   // 检查token是否有效
   const validateToken = (): boolean => {
-    if (!token.value) return false
-    
-    try {
-      // 对于模拟token，直接返回true
-      if (token.value === 'mock-token' || token.value.startsWith('mock-')) {
-        return true
-      }
-      
-      // 对于真实token，检查是否过期
-      const tokenData = JSON.parse(atob(token.value.split('.')[1]))
-      const currentTime = Date.now() / 1000
-      return tokenData.exp > currentTime
-    } catch (error) {
-      console.error('Token validation error:', error)
-      return false
-    }
+    return validateStoredToken(token.value)
   }
 
   const isLoggedIn = (): boolean => {
@@ -198,6 +212,7 @@ export const useUserStore = defineStore('user', () => {
     hasAnyPermission,
     initFromStorage,
     isLoggedIn,
-    validateToken
+    validateToken,
+    validateStoredToken
   }
 })

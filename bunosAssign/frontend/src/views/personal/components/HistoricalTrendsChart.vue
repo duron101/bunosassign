@@ -53,7 +53,7 @@
             <div class="card-content">
               <div class="card-title">趋势状态</div>
               <div class="card-value">{{ getTrendLabel() }}</div>
-              <div class="card-description">{{ trendData.trendAnalysis.message }}</div>
+              <div class="card-description">{{ trendData.trendAnalysis?.message || '暂无分析' }}</div>
             </div>
           </div>
 
@@ -64,7 +64,7 @@
             <div class="card-content">
               <div class="card-title">增长率</div>
               <div class="card-value" :class="getGrowthClass()">
-                {{ (trendData.trendAnalysis.growthRate * 100).toFixed(1) }}%
+                {{ ((trendData.trendAnalysis?.growthRate || 0) * 100).toFixed(1) }}%
               </div>
               <div class="card-description">与历史平均对比</div>
             </div>
@@ -76,8 +76,8 @@
             </div>
             <div class="card-content">
               <div class="card-title">近期平均</div>
-              <div class="card-value">¥{{ formatNumber(trendData.trendAnalysis.recentAverage) }}</div>
-              <div class="card-description">最近{{ Math.min(3, trendData.trendAnalysis.totalPeriods) }}期平均</div>
+              <div class="card-value">¥{{ formatNumber(trendData.trendAnalysis?.recentAverage || 0) }}</div>
+              <div class="card-description">最近{{ Math.min(3, trendData.trendAnalysis?.totalPeriods || 0) }}期平均</div>
             </div>
           </div>
 
@@ -87,8 +87,8 @@
             </div>
             <div class="card-content">
               <div class="card-title">最佳表现</div>
-              <div class="card-value">¥{{ formatNumber(trendData.summary.bestMonth.amount) }}</div>
-              <div class="card-description">{{ trendData.summary.bestMonth.period }}</div>
+              <div class="card-value">¥{{ formatNumber(trendData.summary?.bestMonth?.amount || 0) }}</div>
+              <div class="card-description">{{ trendData.summary?.bestMonth?.period || '暂无数据' }}</div>
             </div>
           </div>
         </div>
@@ -153,7 +153,7 @@
       <div class="insights-section">
         <div class="insights-header">
           <h4>数据洞察</h4>
-          <div class="insights-period">基于最近 {{ trendData.trendAnalysis.totalPeriods }} 期数据</div>
+          <div class="insights-period">基于最近 {{ trendData.trendAnalysis?.totalPeriods || 0 }} 期数据</div>
         </div>
         
         <div class="insights-content">
@@ -335,7 +335,7 @@ const getInsights = () => {
   }
   
   // Best performance insight
-  if (props.trendData.summary.bestMonth.amount > analysis.recentAverage * 1.2) {
+  if (props.trendData.summary?.bestMonth?.amount > analysis.recentAverage * 1.2) {
     insights.push({
       title: '存在峰值',
       description: `${props.trendData.summary.bestMonth.period} 的表现特别突出，可分析成功因素`,

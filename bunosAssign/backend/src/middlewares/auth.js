@@ -81,11 +81,27 @@ const authenticateToken = async (req, res, next) => {
     
     console.log('🔐 用户查询结果:', user ? '用户存在' : '用户不存在')
     
-    if (!user || user.status !== 1) {
-      console.log('❌ 用户不存在或已被禁用:', { userId, userExists: !!user, userStatus: user?.status })
+    if (!user) {
+      console.log('❌ 用户不存在:', { userId })
       return res.status(401).json({
         code: 401,
-        message: '用户不存在或已被禁用',
+        message: '用户不存在',
+        data: null
+      })
+    }
+
+    // 检查用户激活状态 - 兼容不同字段名
+    const isActive = user.isActive === true || user.status === 1 || user.status === true
+    if (!isActive) {
+      console.log('❌ 用户已被禁用:', { 
+        userId, 
+        isActive: user.isActive, 
+        status: user.status,
+        username: user.username 
+      })
+      return res.status(401).json({
+        code: 401,
+        message: '用户已被禁用',
         data: null
       })
     }

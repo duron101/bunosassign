@@ -4,41 +4,14 @@
       {
         "id": 1,
         "username": "admin",
-        "password": "$2a$10$aoBvn0muGJAzzGeAva/8Fu1Qj0EI.NoxQzZQMrdbTyFfABM1CNGIC",
+        "password": "$2a$10$EHqvxSHbKl6qrSEUZrVpaekydzG.Q3P5nbQxvmA44Tmq1W2dw9JB6",
         "name": "系统管理员",
         "email": "admin@company.com",
         "phone": "13800138000",
         "roleId": 1,
         "status": 1,
-        "created_at": "2025-08-16T17:26:13.210Z",
-        "updated_at": "2025-08-18T08:23:20.005Z",
-        "lastLogin": "2025-08-18T08:23:20.005Z"
-      },
-      {
-        "id": 2,
-        "username": "liujing",
-        "password": "$2a$12$YYmIfUdjD.r2bmBK22gCsu1DVav21wW8QR7Y7Do/vBrl4f9Tae9G6",
-        "realName": "刘静",
-        "email": null,
-        "phone": null,
-        "roleId": "Eln8qiLDJhs73Sc7",
-        "departmentId": "DsYMP3aBv5fLHeuW",
-        "status": 1,
-        "created_at": "2025-08-18T09:31:09.623Z",
-        "updated_at": "2025-08-18T09:31:09.623Z"
-      },
-      {
-        "id": 3,
-        "username": "liujing2",
-        "password": "$2a$12$jOSXhE3Vv8OgjB6xTiBdnOEjOfYuaa2bowTNz2otblbLVhfAWVzx.",
-        "realName": "刘静",
-        "email": null,
-        "phone": null,
-        "roleId": "Qz8jzlt6I2qitXpw",
-        "departmentId": "DsYMP3aBv5fLHeuW",
-        "status": 1,
-        "created_at": "2025-08-18T09:39:24.617Z",
-        "updated_at": "2025-08-18T09:39:24.617Z"
+        "created_at": "2025-08-28T16:33:53.418Z",
+        "updated_at": "2025-08-28T16:33:53.418Z"
       }
     ],
     "roles": [
@@ -51,8 +24,8 @@
           "*"
         ],
         "status": 1,
-        "created_at": "2025-08-16T17:26:11.963Z",
-        "updated_at": "2025-08-16T17:26:11.965Z"
+        "created_at": "2025-08-28T16:33:52.932Z",
+        "updated_at": "2025-08-28T16:33:52.932Z"
       },
       {
         "id": 2,
@@ -75,8 +48,8 @@
           "user:edit"
         ],
         "status": 1,
-        "created_at": "2025-08-16T17:26:11.966Z",
-        "updated_at": "2025-08-16T17:26:11.966Z"
+        "created_at": "2025-08-28T16:33:52.932Z",
+        "updated_at": "2025-08-28T16:33:52.932Z"
       },
       {
         "id": 3,
@@ -93,8 +66,8 @@
           "department:view"
         ],
         "status": 1,
-        "created_at": "2025-08-16T17:26:11.966Z",
-        "updated_at": "2025-08-16T17:26:11.966Z"
+        "created_at": "2025-08-28T16:33:52.932Z",
+        "updated_at": "2025-08-28T16:33:52.932Z"
       }
     ],
     "departments": [
@@ -107,8 +80,8 @@
         "parentId": null,
         "status": 1,
         "sort": 1,
-        "created_at": "2025-08-16T17:26:13.210Z",
-        "updated_at": "2025-08-16T17:26:13.210Z"
+        "created_at": "2025-08-28T16:33:53.418Z",
+        "updated_at": "2025-08-28T16:33:53.418Z"
       },
       {
         "id": 2,
@@ -119,8 +92,8 @@
         "parentId": null,
         "status": 1,
         "sort": 2,
-        "created_at": "2025-08-16T17:26:13.210Z",
-        "updated_at": "2025-08-16T17:26:13.210Z"
+        "created_at": "2025-08-28T16:33:53.418Z",
+        "updated_at": "2025-08-28T16:33:53.418Z"
       },
       {
         "id": 3,
@@ -131,8 +104,8 @@
         "parentId": null,
         "status": 1,
         "sort": 3,
-        "created_at": "2025-08-16T17:26:13.210Z",
-        "updated_at": "2025-08-16T17:26:13.210Z"
+        "created_at": "2025-08-28T16:33:53.418Z",
+        "updated_at": "2025-08-28T16:33:53.418Z"
       }
     ],
     "positions": [
@@ -146,8 +119,8 @@
         "salaryRange": "120000-180000",
         "description": "负责核心技术开发",
         "status": 1,
-        "created_at": "2025-08-16T17:26:13.210Z",
-        "updated_at": "2025-08-16T17:26:13.210Z"
+        "created_at": "2025-08-28T16:33:53.418Z",
+        "updated_at": "2025-08-28T16:33:53.418Z"
       },
       {
         "id": 2,
@@ -159,8 +132,8 @@
         "salaryRange": "100000-150000",
         "description": "负责市场推广",
         "status": 1,
-        "created_at": "2025-08-16T17:26:13.210Z",
-        "updated_at": "2025-08-16T17:26:13.210Z"
+        "created_at": "2025-08-28T16:33:53.418Z",
+        "updated_at": "2025-08-28T16:33:53.418Z"
       },
       {
         "id": 3,
@@ -172,8 +145,8 @@
         "salaryRange": "60000-100000",
         "description": "负责财务核算",
         "status": 1,
-        "created_at": "2025-08-16T17:26:13.210Z",
-        "updated_at": "2025-08-16T17:26:13.210Z"
+        "created_at": "2025-08-28T16:33:53.418Z",
+        "updated_at": "2025-08-28T16:33:53.418Z"
       }
     ],
     "employees": [],
@@ -185,8 +158,8 @@
         "description": "公司核心产品线",
         "weight": 0.6,
         "status": 1,
-        "created_at": "2025-08-16T17:26:13.210Z",
-        "updated_at": "2025-08-16T17:26:13.210Z"
+        "created_at": "2025-08-28T16:33:53.418Z",
+        "updated_at": "2025-08-28T16:33:53.418Z"
       },
       {
         "id": 2,
@@ -195,8 +168,8 @@
         "description": "新兴产品线",
         "weight": 0.4,
         "status": 1,
-        "created_at": "2025-08-16T17:26:13.210Z",
-        "updated_at": "2025-08-16T17:26:13.210Z"
+        "created_at": "2025-08-28T16:33:53.418Z",
+        "updated_at": "2025-08-28T16:33:53.418Z"
       }
     ],
     "projects": [],
@@ -204,7 +177,7 @@
     "calculations": []
   },
   "nextId": {
-    "users": 4,
+    "users": 2,
     "roles": 4,
     "departments": 4,
     "positions": 4,
@@ -214,6 +187,6 @@
     "bonusPools": 1,
     "calculations": 1
   },
-  "timestamp": "2025-08-18T09:39:24.617Z",
+  "timestamp": "2025-08-28T16:33:53.418Z",
   "version": "1.0.0"
 }

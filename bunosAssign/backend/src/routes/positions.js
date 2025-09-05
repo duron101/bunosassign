@@ -24,7 +24,7 @@ const positionSchemas = {
     code: Joi.string().min(2).max(50).required(),
     description: Joi.string().max(500).allow('').optional(),
     level: Joi.string().valid('P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'M1', 'M2', 'M3', 'M4').required(),
-    benchmarkValue: Joi.number().positive().required(),
+    benchmarkValue: Joi.number().min(0.1).max(3.0).required(),
     businessLineId: Joi.string().optional(),
     responsibilities: Joi.array().items(Joi.string()).optional(),
     requirements: Joi.array().items(Joi.string()).optional()
@@ -35,7 +35,7 @@ const positionSchemas = {
     code: Joi.string().min(2).max(50).optional(),
     description: Joi.string().max(500).allow('').optional(),
     level: Joi.string().valid('P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'M1', 'M2', 'M3', 'M4').optional(),
-    benchmarkValue: Joi.number().positive().optional(),
+    benchmarkValue: Joi.number().min(0.1).max(3.0).optional(),
     businessLineId: Joi.string().optional(),
     responsibilities: Joi.array().items(Joi.string()).optional(),
     requirements: Joi.array().items(Joi.string()).optional(),
@@ -100,7 +100,7 @@ const positionEncyclopediaSchemas = {
     positions: Joi.array().items(
       Joi.object({
         id: Joi.alternatives().try(Joi.string(), Joi.number()).required(),
-        benchmarkValue: Joi.number().min(0).max(10).required()
+        benchmarkValue: Joi.number().min(0.1).max(3.0).required()
       })
     ).min(1).required()
   }).unknown(false) // 不允许未知字段
@@ -324,7 +324,7 @@ const validateBenchmarkValues = (req, res, next) => {
     positions: Joi.array().items(
       Joi.object({
         id: Joi.alternatives().try(Joi.string(), Joi.number()).required(),
-        benchmarkValue: Joi.number().min(0).max(10).required()
+        benchmarkValue: Joi.number().min(0.1).max(3.0).required()
       })
     ).min(1).required()
   }).unknown(true) // 允许未知字段，避免验证失败

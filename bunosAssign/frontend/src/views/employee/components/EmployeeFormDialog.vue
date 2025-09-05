@@ -64,12 +64,24 @@
 
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="年薪" prop="annualSalary" required>
+            <el-form-item 
+              :label="isEdit ? '期望薪酬' : '年薪'" 
+              prop="annualSalary" 
+              :required="canEditSalary"
+            >
               <el-input-number
+                v-if="canEditSalary"
                 v-model="form.annualSalary"
                 :min="0"
                 :step="1000"
-                placeholder="请输入年薪"
+                :placeholder="isEdit ? '请输入期望薪酬' : '请输入年薪'"
+                style="width: 100%"
+              />
+              <el-input
+                v-else
+                :value="'***'"
+                disabled
+                placeholder="权限不足"
                 style="width: 100%"
               />
             </el-form-item>
@@ -163,6 +175,7 @@ import {
 } from '@/api/employee'
 import { getDepartments } from '@/api/department'
 import { getPositions } from '@/api/position'
+import { useSalaryPermission } from '@/composables/useSalaryPermission'
 
 interface Props {
   visible: boolean
@@ -177,6 +190,9 @@ interface Emits {
 
 const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
+
+// 权限控制
+const { canEditSalary } = useSalaryPermission()
 
 const formRef = ref<FormInstance>()
 const loading = ref(false)
@@ -221,7 +237,7 @@ const rules: FormRules = {
     { required: true, message: '请选择岗位', trigger: 'change' }
   ],
   annualSalary: [
-    { required: true, message: '请输入年薪', trigger: 'blur' },
+    { required: canEditSalary.value, message: '请输入年薪', trigger: 'blur' },
     { type: 'number', min: 0, message: '年薪必须大于等于0', trigger: 'blur' }
   ],
   entryDate: [
@@ -337,8 +353,10 @@ const handleSubmit = async () => {
       // departmentId 和 positionId 保持字符串格式（MongoDB ObjectId）
       departmentId: form.departmentId || '',
       positionId: form.positionId || '',
-      // 只有 annualSalary 需要转换为数字
-      annualSalary: form.annualSalary ? Number(form.annualSalary) : 0
+      // 根据权限处理年薪字段
+      ...(canEditSalary.value && {
+        annualSalary: form.annualSalary ? Number(form.annualSalary) : 0
+      })
     }
     
     console.log('🔍 数据类型转换结果:', {
@@ -350,28 +368,38 @@ const handleSubmit = async () => {
       converted: {
         departmentId: submitData.departmentId,
         positionId: submitData.positionId,
-        annualSalary: submitData.annualSalary
+        ...(canEditSalary.value && { annualSalary: submitData.annualSalary })
       }
     })
     
     // 验证必填字段
-    if (!submitData.departmentId || !submitData.positionId || submitData.annualSalary === 0) {
+    if (!submitData.departmentId || !submitData.positionId) {
       console.error('❌ 必填字段为空或未选择:', {
         departmentId: submitData.departmentId,
-        positionId: submitData.positionId,
-        annualSalary: submitData.annualSalary
+        positionId: submitData.positionId
       })
-      ElMessage.error('请选择部门和岗位，并填写年薪')
+      ElMessage.error('请选择部门和岗位')
       return
     }
     
-    // 验证年薪是否为有效数字
-    if (isNaN(submitData.annualSalary)) {
-      console.error('❌ 年薪数据类型转换失败:', {
-        annualSalary: form.annualSalary
-      })
-      ElMessage.error('请填写有效的年薪')
-      return
+    // 验证年薪（如果有权限编辑）
+    if (canEditSalary.value) {
+      if (submitData.annualSalary === 0) {
+        console.error('❌ 年薪为空:', {
+          annualSalary: submitData.annualSalary
+        })
+        ElMessage.error('请填写年薪')
+        return
+      }
+      
+      // 验证年薪是否为有效数字
+      if (isNaN(submitData.annualSalary)) {
+        console.error('❌ 年薪数据类型转换失败:', {
+          annualSalary: form.annualSalary
+        })
+        ElMessage.error('请填写有效的年薪')
+        return
+      }
     }
     
     // 验证其他必填字段
