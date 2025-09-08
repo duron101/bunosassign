@@ -1,0 +1,60 @@
+# 开发环境配置
+version: '3.8'
+
+services:
+  # 后端开发服务
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: bonus-system-backend-dev
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DB_TYPE: nedb
+      JWT_SECRET: dev-jwt-secret-key-2024
+      JWT_REFRESH_SECRET: dev-refresh-secret-key-2024
+      LOG_LEVEL: debug
+    ports:
+      - "3000:3000"
+      - "9229:9229"  # Node.js调试端口
+    volumes:
+      - ./backend:/app:cached
+      - /app/node_modules
+      - nedb_data:/app/database
+      - backend_logs:/app/logs
+    networks:
+      - bonus-network
+    command: npm run dev
+
+  # 前端开发服务  
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: bonus-system-frontend-dev
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      VITE_API_BASE_URL: http://localhost:3000/api
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./frontend:/app:cached
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - bonus-network
+    command: npm run dev
+
+volumes:
+  nedb_data:
+    driver: local
+  backend_logs:
+    driver: local
+
+networks:
+  bonus-network:
+    driver: bridge

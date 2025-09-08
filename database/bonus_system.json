@@ -1,0 +1,192 @@
+{
+  "data": {
+    "users": [
+      {
+        "id": 1,
+        "username": "admin",
+        "password": "$2a$10$EHqvxSHbKl6qrSEUZrVpaekydzG.Q3P5nbQxvmA44Tmq1W2dw9JB6",
+        "name": "系统管理员",
+        "email": "admin@company.com",
+        "phone": "13800138000",
+        "roleId": 1,
+        "status": 1,
+        "created_at": "2025-08-28T16:33:53.418Z",
+        "updated_at": "2025-08-28T16:33:53.418Z"
+      }
+    ],
+    "roles": [
+      {
+        "id": 1,
+        "name": "系统管理员",
+        "code": "admin",
+        "description": "拥有所有系统权限",
+        "permissions": [
+          "*"
+        ],
+        "status": 1,
+        "created_at": "2025-08-28T16:33:52.932Z",
+        "updated_at": "2025-08-28T16:33:52.932Z"
+      },
+      {
+        "id": 2,
+        "name": "HR管理员",
+        "code": "hr",
+        "description": "人事管理权限",
+        "permissions": [
+          "employee:view",
+          "employee:create",
+          "employee:edit",
+          "employee:delete",
+          "department:view",
+          "department:create",
+          "department:edit",
+          "position:view",
+          "position:create",
+          "position:edit",
+          "user:view",
+          "user:create",
+          "user:edit"
+        ],
+        "status": 1,
+        "created_at": "2025-08-28T16:33:52.932Z",
+        "updated_at": "2025-08-28T16:33:52.932Z"
+      },
+      {
+        "id": 3,
+        "name": "财务管理员",
+        "code": "finance",
+        "description": "财务相关权限",
+        "permissions": [
+          "bonus:view",
+          "bonus:calculate",
+          "bonus:manage",
+          "report:view",
+          "report:export",
+          "employee:view",
+          "department:view"
+        ],
+        "status": 1,
+        "created_at": "2025-08-28T16:33:52.932Z",
+        "updated_at": "2025-08-28T16:33:52.932Z"
+      }
+    ],
+    "departments": [
+      {
+        "id": 1,
+        "name": "技术部",
+        "code": "TECH",
+        "description": "负责技术研发工作",
+        "managerId": null,
+        "parentId": null,
+        "status": 1,
+        "sort": 1,
+        "created_at": "2025-08-28T16:33:53.418Z",
+        "updated_at": "2025-08-28T16:33:53.418Z"
+      },
+      {
+        "id": 2,
+        "name": "市场部",
+        "code": "MARKET",
+        "description": "负责市场营销工作",
+        "managerId": null,
+        "parentId": null,
+        "status": 1,
+        "sort": 2,
+        "created_at": "2025-08-28T16:33:53.418Z",
+        "updated_at": "2025-08-28T16:33:53.418Z"
+      },
+      {
+        "id": 3,
+        "name": "财务部",
+        "code": "FINANCE",
+        "description": "负责财务管理工作",
+        "managerId": null,
+        "parentId": null,
+        "status": 1,
+        "sort": 3,
+        "created_at": "2025-08-28T16:33:53.418Z",
+        "updated_at": "2025-08-28T16:33:53.418Z"
+      }
+    ],
+    "positions": [
+      {
+        "id": 1,
+        "name": "高级工程师",
+        "code": "SR_ENG",
+        "level": "P6",
+        "departmentId": 1,
+        "benchmarkValue": 15000,
+        "salaryRange": "120000-180000",
+        "description": "负责核心技术开发",
+        "status": 1,
+        "created_at": "2025-08-28T16:33:53.418Z",
+        "updated_at": "2025-08-28T16:33:53.418Z"
+      },
+      {
+        "id": 2,
+        "name": "市场经理",
+        "code": "MKT_MGR",
+        "level": "M1",
+        "departmentId": 2,
+        "benchmarkValue": 12000,
+        "salaryRange": "100000-150000",
+        "description": "负责市场推广",
+        "status": 1,
+        "created_at": "2025-08-28T16:33:53.418Z",
+        "updated_at": "2025-08-28T16:33:53.418Z"
+      },
+      {
+        "id": 3,
+        "name": "财务专员",
+        "code": "FIN_SPEC",
+        "level": "P3",
+        "departmentId": 3,
+        "benchmarkValue": 8000,
+        "salaryRange": "60000-100000",
+        "description": "负责财务核算",
+        "status": 1,
+        "created_at": "2025-08-28T16:33:53.418Z",
+        "updated_at": "2025-08-28T16:33:53.418Z"
+      }
+    ],
+    "employees": [],
+    "businessLines": [
+      {
+        "id": 1,
+        "name": "核心业务线",
+        "code": "CORE",
+        "description": "公司核心产品线",
+        "weight": 0.6,
+        "status": 1,
+        "created_at": "2025-08-28T16:33:53.418Z",
+        "updated_at": "2025-08-28T16:33:53.418Z"
+      },
+      {
+        "id": 2,
+        "name": "创新业务线",
+        "code": "INNOVATION",
+        "description": "新兴产品线",
+        "weight": 0.4,
+        "status": 1,
+        "created_at": "2025-08-28T16:33:53.418Z",
+        "updated_at": "2025-08-28T16:33:53.418Z"
+      }
+    ],
+    "projects": [],
+    "bonusPools": [],
+    "calculations": []
+  },
+  "nextId": {
+    "users": 2,
+    "roles": 4,
+    "departments": 4,
+    "positions": 4,
+    "employees": 1,
+    "businessLines": 3,
+    "projects": 1,
+    "bonusPools": 1,
+    "calculations": 1
+  },
+  "timestamp": "2025-08-28T16:33:53.418Z",
+  "version": "1.0.0"
+}
