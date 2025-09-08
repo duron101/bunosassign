@@ -1,0 +1,9 @@
+{"name":"初级开发工程师","code":"junior_dev","description":"负责简单功能开发和学习","status":1,"createdAt":{"$$date":1755522246736},"updatedAt":{"$$date":1755522246736},"_id":"CgoqssfWE7GeXOtb"}
+{"name":"运维工程师","code":"devops","description":"负责部署运维和系统监控","status":1,"createdAt":{"$$date":1755522246736},"updatedAt":{"$$date":1755522246736},"_id":"JveA19I1M4NfLRPF"}
+{"name":"产品经理","code":"product_mgr","description":"负责产品需求分析和项目管理","status":1,"createdAt":{"$$date":1755522246736},"updatedAt":{"$$date":1755522246736},"_id":"PXFK6bEiog8alTfa"}
+{"name":"UI设计师","code":"ui_designer","description":"负责界面设计和用户体验","status":1,"createdAt":{"$$date":1755522246736},"updatedAt":{"$$date":1755522246736},"_id":"Uqt4IjpfJOsbKuEI"}
+{"name":"开发工程师","code":"developer","description":"负责功能模块开发和测试","status":1,"createdAt":{"$$date":1755522246736},"updatedAt":{"$$date":1755522246736},"_id":"iV8EFzuekOnapIm8"}
+{"name":"技术负责人","code":"tech_lead","description":"负责技术方案设计和团队管理","status":1,"createdAt":{"$$date":1755522246736},"updatedAt":{"$$date":1755522246736},"_id":"o7otTPJQUpKt4ywm"}
+{"name":"测试工程师","code":"tester","description":"负责测试用例设计和质量保证","status":1,"createdAt":{"$$date":1755522246736},"updatedAt":{"$$date":1755522246736},"_id":"skeAIIeeFDSAYKy9"}
+{"name":"高级开发工程师","code":"senior_dev","description":"负责核心模块开发和技术攻关","status":1,"createdAt":{"$$date":1755522246736},"updatedAt":{"$$date":1755522246736},"_id":"tBJ74rBbTCpYe2wo"}
+{"name":"业务专家","code":"business_expert","description":"负责总体业务指导和用户交互顾问","status":1,"createdAt":{"$$date":1755522246736},"updatedAt":{"$$date":1755522246736},"_id":"business_expert_001"}

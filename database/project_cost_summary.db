@@ -1,0 +1,2 @@
+{"$$indexCreated":{"fieldName":"projectId","unique":true,"sparse":false}}
+{"$$indexCreated":{"fieldName":"lastUpdated","unique":false,"sparse":false}}

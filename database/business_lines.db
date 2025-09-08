@@ -1,0 +1,9 @@
+{"name":"产品研发线","code":"PRODUCT","description":"产品开发与优化","weight":0.3,"status":1,"createdAt":{"$$date":1755363643797},"updatedAt":{"$$date":1755363643797},"_id":"9KwOiW6b4kJiBpbi"}
+{"name":"商务渠道线","code":"BUSINESS_MARKET","description":"商务流程、渠道拓展、商机汇总、合同管理","managerId":"VU9LFcUfr1dO11Kz","profitTarget":5,"kpiMetrics":[{"name":"商务拓展","target":2,"weight":0.3},{"name":"渠道维护","target":100,"weight":0.3},{"name":"商务闭环率","target":100,"weight":0.4}],"status":1,"createdAt":{"$$date":1755836447340},"updatedAt":{"$$date":1755836447340},"_id":"GuDI5gOHb8rjdQ8U"}
+{"name":"市场工程线","code":"MARKETING_ENG","description":"售前支持、市场推广、技术支持","weight":0.25,"status":1,"createdAt":{"$$date":1755363643797},"updatedAt":{"$$date":1755363643797},"_id":"Ly6kLcrzWVgszZXW"}
+{"name":"运营支持线","code":"OPERATION","description":"内部运营管理","weight":0.1,"status":1,"createdAt":{"$$date":1755363643797},"updatedAt":{"$$date":1755363643797},"_id":"SA0HPyflKXdlOyXv"}
+{"name":"项目实施线","code":"IMPLEMENTATION","description":"项目交付实施","weight":0.35,"status":1,"createdAt":{"$$date":1755363643797},"updatedAt":{"$$date":1755363643797},"_id":"XJD1HavHAMpjxdl0"}
+{"_id":"bl_sales","name":"销售市场","code":"SALES","weight":0.3,"description":"销售和市场推广","isActive":true,"createdAt":{"$$date":1756354817910},"updatedAt":{"$$date":1756354817910}}
+{"_id":"bl_tech","name":"技术研发","code":"TECH","weight":0.4,"description":"技术开发相关业务","isActive":true,"createdAt":{"$$date":1756354817910},"updatedAt":{"$$date":1756354817910}}
+{"$$indexCreated":{"fieldName":"code","unique":true,"sparse":false}}
+{"$$indexCreated":{"fieldName":"name","unique":false,"sparse":false}}

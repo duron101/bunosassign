@@ -1,0 +1,7 @@
+{"projectId":"6kFLdeY45W2UQiwS","businessLineId":"Ly6kLcrzWVgszZXW","weight":0.24,"reason":null,"isCustom":true,"effectiveDate":{"$$date":1755837262327},"createdAt":{"$$date":1755837262327},"updatedAt":{"$$date":1755837262327},"_id":"ANLsfEelCQU70q8V"}
+{"projectId":"6kFLdeY45W2UQiwS","businessLineId":"SA0HPyflKXdlOyXv","weight":0.1,"reason":null,"isCustom":true,"effectiveDate":{"$$date":1755837262327},"createdAt":{"$$date":1755837262327},"updatedAt":{"$$date":1755837262327},"_id":"Y2R6zMZDKvmY8T9A"}
+{"projectId":"6kFLdeY45W2UQiwS","businessLineId":"GuDI5gOHb8rjdQ8U","weight":0.01,"reason":null,"isCustom":true,"effectiveDate":{"$$date":1755837262327},"createdAt":{"$$date":1755837262327},"updatedAt":{"$$date":1755837262327},"_id":"Yx2x4AS8nsJ1NJAq"}
+{"projectId":"6kFLdeY45W2UQiwS","businessLineId":"XJD1HavHAMpjxdl0","weight":0.35,"reason":null,"isCustom":true,"effectiveDate":{"$$date":1755837262327},"createdAt":{"$$date":1755837262327},"updatedAt":{"$$date":1755837262327},"_id":"auuUiTWEy0MglLDO"}
+{"projectId":"6kFLdeY45W2UQiwS","businessLineId":"9KwOiW6b4kJiBpbi","weight":0.3,"reason":null,"isCustom":true,"effectiveDate":{"$$date":1755837262327},"createdAt":{"$$date":1755837262327},"updatedAt":{"$$date":1755837262327},"_id":"mWgNmoeANFHKKIo7"}
+{"$$indexCreated":{"fieldName":"projectId","unique":false,"sparse":false}}
+{"$$indexCreated":{"fieldName":"businessLineId","unique":false,"sparse":false}}

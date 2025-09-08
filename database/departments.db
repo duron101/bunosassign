@@ -1,0 +1,12 @@
+{"name":"综合管理部","code":"ADMINISTRATION","description":"财务、人事、行政管理","parentId":null,"businessLineId":"SA0HPyflKXdlOyXv","managerId":null,"status":1,"sort":6,"createdAt":{"$$date":1755363643799},"updatedAt":{"$$date":1755363643799},"_id":"DsYMP3aBv5fLHeuW"}
+{"name":"项目实施二部","code":"IMPL_02","description":"客户项目交付实施","parentId":null,"businessLineId":"XJD1HavHAMpjxdl0","managerId":null,"status":1,"sort":3,"createdAt":{"$$date":1755363643799},"updatedAt":{"$$date":1755363643799},"_id":"LrjB7X5dm5NwVONx"}
+{"name":"测试部","code":"002323","description":"爱上对方爱上对方","businessLineId":"Ly6kLcrzWVgszZXW","managerId":"AEj02DNLHOssk29p","status":0,"createdAt":{"$$date":1755453310377},"updatedAt":{"$$date":1755453310377},"_id":"N9ZDMR5BICNv4phQ"}
+{"name":"项目实施一部","code":"IMPL_01","description":"客户项目交付实施","parentId":null,"businessLineId":"XJD1HavHAMpjxdl0","managerId":null,"status":1,"sort":2,"createdAt":{"$$date":1755363643799},"updatedAt":{"$$date":1755363643799},"_id":"NUd4vzaNoxq57jrS"}
+{"name":"市场工程部","code":"MARKETING_ENG","description":"售前支持、市场推广、技术支持","parentId":null,"businessLineId":"Ly6kLcrzWVgszZXW","managerId":null,"status":1,"sort":4,"createdAt":{"$$date":1755363643799},"updatedAt":{"$$date":1755363643799},"_id":"ZE5q0Z1U3fCr7JsW"}
+{"name":"商务部","code":"BUSINESS","description":"商务拓展与合作","parentId":null,"businessLineId":"Ly6kLcrzWVgszZXW","managerId":null,"status":1,"sort":5,"createdAt":{"$$date":1755363643799},"updatedAt":{"$$date":1755363643799},"_id":"d9zSGsgB7KP3kXKF"}
+{"_id":"dept_operation","name":"运营部","code":"OPERATION","description":"业务运营部门","parentId":null,"level":1,"createdAt":{"$$date":1756354817903},"updatedAt":{"$$date":1756354817903}}
+{"_id":"dept_tech","name":"技术部","code":"TECH","description":"技术开发部门","parentId":null,"level":1,"createdAt":{"$$date":1756354817903},"updatedAt":{"$$date":1756354817903}}
+{"name":"产品部","code":"PRODUCT","description":"产品规划、设计、研发、优化","parentId":null,"businessLineId":"9KwOiW6b4kJiBpbi","managerId":null,"status":1,"sort":1,"createdAt":{"$$date":1755363643799},"updatedAt":{"$$date":1755363643799},"_id":"ji5a5e48BWNBG0Sl"}
+{"$$indexCreated":{"fieldName":"code","unique":true,"sparse":false}}
+{"$$indexCreated":{"fieldName":"name","unique":false,"sparse":false}}
+{"$$indexCreated":{"fieldName":"businessLineId","unique":false,"sparse":false}}

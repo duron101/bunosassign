@@ -1,0 +1,4 @@
+{"$$indexCreated":{"fieldName":"projectId","unique":false,"sparse":false}}
+{"$$indexCreated":{"fieldName":"applicantId","unique":false,"sparse":false}}
+{"$$indexCreated":{"fieldName":"status","unique":false,"sparse":false}}
+{"$$indexCreated":{"fieldName":"createdAt","unique":false,"sparse":false}}

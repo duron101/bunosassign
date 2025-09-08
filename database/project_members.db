@@ -1,0 +1,6 @@
+{"projectId":"proj_active_1","employeeId":"4S0AcqCTtddHBRRF","status":"pending","applyReason":"啊手动阀手动阀阿斯蒂芬噶啥的","contributionWeight":1,"createdAt":{"$$date":1756393611819},"updatedAt":{"$$date":1756393611819},"_id":"766d094d-ad58-4c13-a913-05080704ee17"}
+{"projectId":"6kFLdeY45W2UQiwS","employeeId":"4S0AcqCTtddHBRRF","role":"developer","status":"active","joinDate":{"$$date":1755765516847},"createdAt":{"$$date":1755765516847},"updatedAt":{"$$date":1755765516847},"_id":"pm_test_1"}
+{"projectId":"e77xr593tay9ZIHj","employeeId":"4S0AcqCTtddHBRRF","role":"tester","status":"pending","joinDate":{"$$date":1755765516847},"createdAt":{"$$date":1755765516847},"updatedAt":{"$$date":1755765516847},"_id":"pm_test_2"}
+{"$$indexCreated":{"fieldName":"projectId","unique":false,"sparse":false}}
+{"$$indexCreated":{"fieldName":"employeeId","unique":false,"sparse":false}}
+{"$$indexCreated":{"fieldName":"status","unique":false,"sparse":false}}

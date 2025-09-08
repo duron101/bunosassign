@@ -1,0 +1,6 @@
+{"$$indexCreated":{"fieldName":"userId","unique":false,"sparse":false}}
+{"$$indexCreated":{"fieldName":"delegateTo","unique":false,"sparse":false}}
+{"$$indexCreated":{"fieldName":"resourceType","unique":false,"sparse":false}}
+{"$$indexCreated":{"fieldName":"resourceId","unique":false,"sparse":false}}
+{"$$indexCreated":{"fieldName":"action","unique":false,"sparse":false}}
+{"$$indexCreated":{"fieldName":"status","unique":false,"sparse":false}}
